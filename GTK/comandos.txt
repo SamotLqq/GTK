@@ -1,0 +1,2 @@
+comando de ejecución para aplicación gtk: gcc -o mi_aplicacion mi_aplicacion.c `pkg-config --cflags --libs gtk+-3.0`
+comando de ejecucion para ejemplo_gtk.c: gcc -o ejemplo_gtk ejemplo_gtk.c `pkg-config --cflags --libs gtk+-3.0`
