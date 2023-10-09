@@ -66,20 +66,44 @@
             <property name="can-focus">False</property>
             <property name="orientation">vertical</property>
             <child>
-              <object class="GtkLabel">
+              <!-- n-columns=2 n-rows=1 -->
+              <object class="GtkGrid">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="margin-top">5</property>
-                <property name="margin-bottom">5</property>
-                <property name="label" translatable="yes">Dueño: {nombre}</property>
-                <attributes>
-                  <attribute name="font-desc" value="Garuda 10"/>
-                  <attribute name="style" value="normal"/>
-                  <attribute name="weight" value="ultraheavy"/>
-                  <attribute name="variant" value="small-caps"/>
-                  <attribute name="stretch" value="normal"/>
-                  <attribute name="scale" value="2"/>
-                </attributes>
+                <property name="halign">center</property>
+                <property name="margin-bottom">15</property>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="margin-top">5</property>
+                    <property name="margin-bottom">5</property>
+                    <property name="label" translatable="yes">Dueño: </property>
+                    <attributes>
+                      <attribute name="font-desc" value="Garuda 10"/>
+                      <attribute name="style" value="normal"/>
+                      <attribute name="weight" value="ultraheavy"/>
+                      <attribute name="variant" value="small-caps"/>
+                      <attribute name="stretch" value="normal"/>
+                      <attribute name="scale" value="2"/>
+                    </attributes>
+                  </object>
+                  <packing>
+                    <property name="left-attach">0</property>
+                    <property name="top-attach">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkEntry">
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="text" translatable="yes">{nombre}</property>
+                  </object>
+                  <packing>
+                    <property name="left-attach">1</property>
+                    <property name="top-attach">0</property>
+                  </packing>
+                </child>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -88,20 +112,44 @@
               </packing>
             </child>
             <child>
-              <object class="GtkLabel">
+              <!-- n-columns=2 n-rows=1 -->
+              <object class="GtkGrid">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="margin-top">5</property>
-                <property name="margin-bottom">5</property>
-                <property name="label" translatable="yes">Patente: {xx xxx xx o xxx xxx}</property>
-                <attributes>
-                  <attribute name="font-desc" value="Garuda 10"/>
-                  <attribute name="style" value="normal"/>
-                  <attribute name="weight" value="ultraheavy"/>
-                  <attribute name="variant" value="small-caps"/>
-                  <attribute name="stretch" value="normal"/>
-                  <attribute name="scale" value="2"/>
-                </attributes>
+                <property name="halign">center</property>
+                <property name="margin-bottom">15</property>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="margin-top">5</property>
+                    <property name="margin-bottom">5</property>
+                    <property name="label" translatable="yes">Patente: </property>
+                    <attributes>
+                      <attribute name="font-desc" value="Garuda 10"/>
+                      <attribute name="style" value="normal"/>
+                      <attribute name="weight" value="ultraheavy"/>
+                      <attribute name="variant" value="small-caps"/>
+                      <attribute name="stretch" value="normal"/>
+                      <attribute name="scale" value="2"/>
+                    </attributes>
+                  </object>
+                  <packing>
+                    <property name="left-attach">0</property>
+                    <property name="top-attach">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkEntry">
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="text" translatable="yes">{patente}</property>
+                  </object>
+                  <packing>
+                    <property name="left-attach">1</property>
+                    <property name="top-attach">0</property>
+                  </packing>
+                </child>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -110,43 +158,49 @@
               </packing>
             </child>
             <child>
-              <object class="GtkLabel">
+              <!-- n-columns=2 n-rows=1 -->
+              <object class="GtkGrid">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="margin-top">5</property>
-                <property name="margin-bottom">5</property>
-                <property name="label" translatable="yes">Modelo: {m}</property>
-                <attributes>
-                  <attribute name="font-desc" value="Garuda 10"/>
-                  <attribute name="style" value="normal"/>
-                  <attribute name="weight" value="ultraheavy"/>
-                  <attribute name="variant" value="small-caps"/>
-                  <attribute name="stretch" value="normal"/>
-                  <attribute name="scale" value="2"/>
-                </attributes>
+                <property name="halign">center</property>
+                <property name="margin-bottom">15</property>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="margin-top">5</property>
+                    <property name="margin-bottom">5</property>
+                    <property name="label" translatable="yes">Modelo</property>
+                    <attributes>
+                      <attribute name="font-desc" value="Garuda 10"/>
+                      <attribute name="style" value="normal"/>
+                      <attribute name="weight" value="ultraheavy"/>
+                      <attribute name="variant" value="small-caps"/>
+                      <attribute name="stretch" value="normal"/>
+                      <attribute name="scale" value="2"/>
+                    </attributes>
+                  </object>
+                  <packing>
+                    <property name="left-attach">0</property>
+                    <property name="top-attach">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkEntry">
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="text" translatable="yes">{Modelo}</property>
+                  </object>
+                  <packing>
+                    <property name="left-attach">1</property>
+                    <property name="top-attach">0</property>
+                  </packing>
+                </child>
               </object>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
                 <property name="position">2</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkComboBox">
-                <property name="width-request">200</property>
-                <property name="visible">True</property>
-                <property name="can-focus">False</property>
-                <property name="halign">center</property>
-                <property name="margin-top">5</property>
-                <property name="margin-bottom">10</property>
-                <property name="has-frame">False</property>
-                <property name="entry-text-column">5</property>
-                <property name="popup-fixed-width">False</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">3</property>
               </packing>
             </child>
             <child>
@@ -156,7 +210,7 @@
                 <property name="orientation">vertical</property>
                 <child>
                   <object class="GtkButton">
-                    <property name="label" translatable="yes">Editar</property>
+                    <property name="label" translatable="yes">Confirmar</property>
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="receives-default">True</property>
@@ -174,7 +228,7 @@
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">4</property>
+                <property name="position">3</property>
               </packing>
             </child>
             <child>
@@ -202,7 +256,7 @@
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">5</property>
+                <property name="position">4</property>
               </packing>
             </child>
           </object>
