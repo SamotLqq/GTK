@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.40.0 -->
+<!-- Generated with glade 3.38.2 -->
 <interface>
   <requires lib="gtk+" version="3.24"/>
-  <object class="GtkWindow">
+  <object class="GtkWindow" id="trabajo_edit">
     <property name="can-focus">False</property>
     <property name="title" translatable="yes">trabajo</property>
     <property name="default-width">1000</property>
@@ -28,7 +28,8 @@
                     <property name="can-focus">False</property>
                     <property name="orientation">vertical</property>
                     <child>
-                      <object class="GtkLabel">
+                      <object class="GtkLabel" id="t_numero">
+                        <property name="name">t_numero</property>
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="margin-top">10</property>
@@ -103,7 +104,8 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkEntry">
+                          <object class="GtkEntry" id="te_km">
+                            <property name="name">te_km</property>
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
                             <property name="text" translatable="yes">{k}</property>
@@ -149,7 +151,8 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkEntry">
+                          <object class="GtkEntry" id="te_fecha">
+                            <property name="name">te_fecha</property>
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
                             <property name="text" translatable="yes">{f}</property>
@@ -195,7 +198,8 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkEntry">
+                          <object class="GtkEntry" id="te_detalle">
+                            <property name="name">te_detalle</property>
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
                             <property name="text" translatable="yes">{detalle}</property>
@@ -225,14 +229,16 @@
                     <property name="can-focus">False</property>
                     <property name="orientation">vertical</property>
                     <child>
-                      <object class="GtkButton">
+                      <object class="GtkButton" id="te_confirmar">
                         <property name="label" translatable="yes">Confirmar</property>
+                        <property name="name">te_confirmar</property>
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="receives-default">True</property>
                         <property name="halign">center</property>
                         <property name="margin-top">15</property>
                         <property name="margin-bottom">5</property>
+                        <signal name="clicked" handler="handler_confirmar" swapped="no"/>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -253,14 +259,16 @@
                     <property name="can-focus">False</property>
                     <property name="orientation">vertical</property>
                     <child>
-                      <object class="GtkButton">
+                      <object class="GtkButton" id="te_volver">
                         <property name="label" translatable="yes">Volver</property>
+                        <property name="name">te_volver</property>
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="receives-default">True</property>
                         <property name="halign">center</property>
                         <property name="margin-top">15</property>
                         <property name="margin-bottom">5</property>
+                        <signal name="clicked" handler="handler_volver" swapped="no"/>
                       </object>
                       <packing>
                         <property name="expand">False</property>

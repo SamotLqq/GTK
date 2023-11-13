@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.40.0 -->
+<!-- Generated with glade 3.38.2 -->
 <interface>
   <requires lib="gtk+" version="3.24"/>
   <object class="GtkWindow">
@@ -66,7 +66,8 @@
             <property name="can-focus">False</property>
             <property name="orientation">vertical</property>
             <child>
-              <object class="GtkLabel">
+              <object class="GtkLabel" id="d_nombre">
+                <property name="name">d_nombre</property>
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="margin-top">5</property>
@@ -88,7 +89,8 @@
               </packing>
             </child>
             <child>
-              <object class="GtkLabel">
+              <object class="GtkLabel" id="d_patente">
+                <property name="name">d_patente</property>
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="margin-top">5</property>
@@ -110,7 +112,8 @@
               </packing>
             </child>
             <child>
-              <object class="GtkLabel">
+              <object class="GtkLabel" id="d_modelo">
+                <property name="name">d_modelo</property>
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="margin-top">5</property>
@@ -132,7 +135,8 @@
               </packing>
             </child>
             <child>
-              <object class="GtkComboBox">
+              <object class="GtkComboBox" id="d_trabajos">
+                <property name="name">d_trabajos</property>
                 <property name="width-request">200</property>
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
@@ -155,14 +159,16 @@
                 <property name="can-focus">False</property>
                 <property name="orientation">vertical</property>
                 <child>
-                  <object class="GtkButton">
-                    <property name="label" translatable="yes">Volver</property>
+                  <object class="GtkButton" id="d_editar">
+                    <property name="label" translatable="yes">Editar</property>
+                    <property name="name">d_editar</property>
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="receives-default">True</property>
                     <property name="halign">center</property>
                     <property name="margin-top">15</property>
                     <property name="margin-bottom">5</property>
+                    <signal name="clicked" handler="handler_editar" object="__glade_unnamed_11" swapped="no"/>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -175,6 +181,36 @@
                 <property name="expand">False</property>
                 <property name="fill">True</property>
                 <property name="position">4</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkBox">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="orientation">vertical</property>
+                <child>
+                  <object class="GtkButton" id="d_volver">
+                    <property name="label" translatable="yes">Volver</property>
+                    <property name="name">d_volver</property>
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="receives-default">True</property>
+                    <property name="halign">center</property>
+                    <property name="margin-top">15</property>
+                    <property name="margin-bottom">5</property>
+                    <signal name="clicked" handler="handler_volver" object="__glade_unnamed_13" swapped="no"/>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">5</property>
               </packing>
             </child>
           </object>

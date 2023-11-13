@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.40.0 -->
+<!-- Generated with glade 3.38.2 -->
 <interface>
   <requires lib="gtk+" version="3.24"/>
-  <object class="GtkWindow">
+  <object class="GtkWindow" id="principal">
     <property name="can-focus">False</property>
     <property name="title" translatable="yes">principal</property>
     <property name="default-width">1000</property>
@@ -209,7 +209,8 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkEntry">
+                              <object class="GtkEntry" id="p_patente_buscar">
+                                <property name="name">p_patente_buscar</property>
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
                               </object>
@@ -227,8 +228,9 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkButton">
+                          <object class="GtkButton" id="p_buscar">
                             <property name="label" translatable="yes">Buscar</property>
+                            <property name="name">p_buscar</property>
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
                             <property name="receives-default">True</property>
@@ -238,6 +240,7 @@
                             <property name="margin-end">15</property>
                             <property name="margin-top">15</property>
                             <property name="margin-bottom">15</property>
+                            <signal name="clicked" handler="handler_buscar" swapped="no"/>
                           </object>
                           <packing>
                             <property name="expand">False</property>
@@ -258,13 +261,15 @@
                         <property name="orientation">vertical</property>
                         <property name="homogeneous">True</property>
                         <child>
-                          <object class="GtkButton">
+                          <object class="GtkButton" id="p_listado">
                             <property name="label" translatable="yes">Ver listado</property>
+                            <property name="name">p_listado</property>
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
                             <property name="receives-default">True</property>
                             <property name="halign">center</property>
                             <property name="valign">center</property>
+                            <signal name="clicked" handler="handler_ver" swapped="no"/>
                           </object>
                           <packing>
                             <property name="expand">False</property>
@@ -322,7 +327,8 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkEntry">
+                              <object class="GtkEntry" id="p_patente_agregar">
+                                <property name="name">p_patente_agregar</property>
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
                               </object>
@@ -375,7 +381,8 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkEntry">
+                              <object class="GtkEntry" id="p_dueno">
+                                <property name="name">p_dueno</property>
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
                               </object>
@@ -428,7 +435,8 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkEntry">
+                              <object class="GtkEntry" id="p_modelo">
+                                <property name="name">p_modelo</property>
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
                               </object>
@@ -481,7 +489,8 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkCalendar">
+                              <object class="GtkCalendar" id="p_fecha">
+                                <property name="name">p_fecha</property>
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
                                 <property name="year">2023</property>
@@ -537,7 +546,8 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkEntry">
+                              <object class="GtkEntry" id="p_km">
+                                <property name="name">p_km</property>
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
                               </object>
@@ -590,7 +600,8 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkEntry">
+                              <object class="GtkEntry" id="p_trabajos">
+                                <property name="name">p_trabajos</property>
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
                               </object>
@@ -614,8 +625,9 @@
                             <property name="valign">end</property>
                             <property name="orientation">vertical</property>
                             <child>
-                              <object class="GtkButton">
+                              <object class="GtkButton" id="p_agregar">
                                 <property name="label" translatable="yes">Agregar</property>
+                                <property name="name">p_agregar</property>
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
                                 <property name="receives-default">True</property>
@@ -623,6 +635,7 @@
                                 <property name="valign">center</property>
                                 <property name="margin-top">20</property>
                                 <property name="margin-bottom">20</property>
+                                <signal name="clicked" handler="handler_agregar" swapped="no"/>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
