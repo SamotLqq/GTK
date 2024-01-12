@@ -746,6 +746,7 @@
                         <property name="halign">center</property>
                         <property name="margin-top">15</property>
                         <property name="margin-bottom">5</property>
+                        <signal name="clicked" handler="handler_volver_principal_listado" swapped="no"/>
                       </object>
                       <packing>
                         <property name="expand">False</property>
