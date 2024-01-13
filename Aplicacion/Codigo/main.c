@@ -2,15 +2,26 @@
 #include <stdio.h>
 
 GtkBuilder *builder;
+// renderiza principal.glade con funcionalidades
 void renderizar_principal();
+// renderiza detalle.glade con funcionalidades
 void renderizar_detalle();
+// renderiza listado.glade con funcionalidades
 void renderizar_listado();
+// manejador del boton volver a principal.glade desde listado.glade
 void handle_volver_principal_listado(GtkButton* button, gpointer data);
+// manejador del boton volver a principal.glade desde detalle.glade
 void handle_volver_principal_detalle(GtkButton* button, gpointer data);
+// manejador del boton volver a detalle.glade desde detalleEditar.glade
 void handle_volver_d_de(GtkButton* button, gpointer data);
+// manejador del boton ver de principal.glade
 void handle_ver(GtkButton* button, gpointer data);
+// manejador del boton buscar de principal.glade
 void handle_buscar(GtkButton* button, gpointer data);
+// manejador del boton editar de detalle.glade
 void handle_editar(GtkButton* button, gpointer data);
+
+
 
 
 int main(int argc, char *argv[]) {
@@ -129,6 +140,14 @@ void handle_ver(GtkButton* button, gpointer data) {
 }
 
 void handle_buscar(GtkButton* button, gpointer data) {
+    // Obtener el GtkEntry
+    GObject *entry = gtk_builder_get_object(builder, "p_patente_buscar");
+    // Obtener el texto del GtkEntry
+    const gchar *entry_text = gtk_entry_get_text(GTK_ENTRY(entry));
+    // Imprimir el texto (puedes hacer lo que necesites aquí)
+    g_print("Texto del GtkEntry: %s\n", entry_text);
+
+
     renderizar_detalle();
     // Ocultar o destruir la interfaz anterior
     GObject *ventana_actual = gtk_builder_get_object(builder, "principal");
