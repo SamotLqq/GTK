@@ -72,13 +72,11 @@
                         <property name="halign">center</property>
                         <property name="valign">center</property>
                         <child>
-                          <object class="GtkButton">
+                          <object class="GtkButton" id="l_ver_1">
                             <property name="label" translatable="yes">Ver</property>
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
                             <property name="receives-default">True</property>
-                            <property name="margin-left">5</property>
-                            <property name="margin-right">5</property>
                             <property name="margin-start">5</property>
                             <property name="margin-end">5</property>
                             <signal name="clicked" handler="handler_buscar" swapped="no"/>
@@ -89,13 +87,11 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkButton">
+                          <object class="GtkButton" id="l_editar_1">
                             <property name="label" translatable="yes">Editar</property>
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
                             <property name="receives-default">True</property>
-                            <property name="margin-left">5</property>
-                            <property name="margin-right">5</property>
                             <property name="margin-start">5</property>
                             <property name="margin-end">5</property>
                             <property name="margin-top">5</property>
@@ -107,13 +103,11 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkButton">
+                          <object class="GtkButton" id="l_eliminar_1">
                             <property name="label" translatable="yes">Eliminar</property>
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
                             <property name="receives-default">True</property>
-                            <property name="margin-left">5</property>
-                            <property name="margin-right">5</property>
                             <property name="margin-start">5</property>
                             <property name="margin-end">5</property>
                             <property name="margin-top">5</property>
@@ -140,13 +134,11 @@
                         <property name="halign">center</property>
                         <property name="valign">center</property>
                         <child>
-                          <object class="GtkButton">
+                          <object class="GtkButton" id="l_ver_3">
                             <property name="label" translatable="yes">Ver</property>
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
                             <property name="receives-default">True</property>
-                            <property name="margin-left">5</property>
-                            <property name="margin-right">5</property>
                             <property name="margin-start">5</property>
                             <property name="margin-end">5</property>
                             <property name="margin-top">5</property>
@@ -157,13 +149,11 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkButton">
+                          <object class="GtkButton" id="l_eliminar_3">
                             <property name="label" translatable="yes">Eliminar</property>
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
                             <property name="receives-default">True</property>
-                            <property name="margin-left">5</property>
-                            <property name="margin-right">5</property>
                             <property name="margin-start">5</property>
                             <property name="margin-end">5</property>
                             <property name="margin-top">5</property>
@@ -175,13 +165,11 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkButton">
+                          <object class="GtkButton" id="l_editar_3">
                             <property name="label" translatable="yes">Editar</property>
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
                             <property name="receives-default">True</property>
-                            <property name="margin-left">5</property>
-                            <property name="margin-right">5</property>
                             <property name="margin-start">5</property>
                             <property name="margin-end">5</property>
                             <property name="margin-top">5</property>
@@ -297,8 +285,6 @@
                       <object class="GtkLabel">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="margin-left">5</property>
-                        <property name="margin-right">5</property>
                         <property name="margin-start">5</property>
                         <property name="margin-end">5</property>
                         <property name="margin-top">5</property>
@@ -326,8 +312,6 @@
                       <object class="GtkLabel">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="margin-left">5</property>
-                        <property name="margin-right">5</property>
                         <property name="margin-start">5</property>
                         <property name="margin-end">5</property>
                         <property name="margin-top">5</property>
@@ -353,8 +337,6 @@
                       <object class="GtkLabel">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="margin-left">5</property>
-                        <property name="margin-right">5</property>
                         <property name="margin-start">5</property>
                         <property name="margin-end">5</property>
                         <property name="margin-top">5</property>
@@ -380,8 +362,6 @@
                       <object class="GtkLabel">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="margin-left">5</property>
-                        <property name="margin-right">5</property>
                         <property name="margin-start">5</property>
                         <property name="margin-end">5</property>
                         <property name="margin-top">5</property>
@@ -414,13 +394,11 @@
                         <property name="halign">center</property>
                         <property name="valign">center</property>
                         <child>
-                          <object class="GtkButton">
+                          <object class="GtkButton" id="l_ver_2">
                             <property name="label" translatable="yes">Ver</property>
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
                             <property name="receives-default">True</property>
-                            <property name="margin-left">5</property>
-                            <property name="margin-right">5</property>
                             <property name="margin-start">5</property>
                             <property name="margin-end">5</property>
                             <property name="margin-top">5</property>
@@ -431,13 +409,11 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkButton">
+                          <object class="GtkButton" id="l_editar_2">
                             <property name="label" translatable="yes">Editar</property>
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
                             <property name="receives-default">True</property>
-                            <property name="margin-left">5</property>
-                            <property name="margin-right">5</property>
                             <property name="margin-start">5</property>
                             <property name="margin-end">5</property>
                             <property name="margin-top">5</property>
@@ -448,13 +424,11 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkButton">
+                          <object class="GtkButton" id="l_eliminar_2">
                             <property name="label" translatable="yes">Eliminar</property>
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
                             <property name="receives-default">True</property>
-                            <property name="margin-left">6</property>
-                            <property name="margin-right">5</property>
                             <property name="margin-start">6</property>
                             <property name="margin-end">5</property>
                             <property name="margin-top">5</property>
@@ -475,8 +449,6 @@
                       <object class="GtkLabel">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="margin-left">5</property>
-                        <property name="margin-right">5</property>
                         <property name="margin-start">5</property>
                         <property name="margin-end">5</property>
                         <property name="margin-top">5</property>
@@ -502,8 +474,6 @@
                       <object class="GtkLabel">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="margin-left">5</property>
-                        <property name="margin-right">5</property>
                         <property name="margin-start">5</property>
                         <property name="margin-end">5</property>
                         <property name="margin-top">5</property>
@@ -531,8 +501,6 @@
                       <object class="GtkLabel">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="margin-left">5</property>
-                        <property name="margin-right">5</property>
                         <property name="margin-start">5</property>
                         <property name="margin-end">5</property>
                         <property name="margin-top">5</property>
@@ -560,8 +528,6 @@
                       <object class="GtkLabel">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="margin-left">5</property>
-                        <property name="margin-right">5</property>
                         <property name="margin-start">5</property>
                         <property name="margin-end">5</property>
                         <property name="margin-top">5</property>
@@ -587,8 +553,6 @@
                       <object class="GtkLabel">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="margin-left">5</property>
-                        <property name="margin-right">5</property>
                         <property name="margin-start">5</property>
                         <property name="margin-end">5</property>
                         <property name="margin-top">5</property>
@@ -614,8 +578,6 @@
                       <object class="GtkLabel">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="margin-left">5</property>
-                        <property name="margin-right">5</property>
                         <property name="margin-start">5</property>
                         <property name="margin-end">5</property>
                         <property name="margin-top">5</property>
@@ -641,8 +603,6 @@
                       <object class="GtkLabel">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="margin-left">5</property>
-                        <property name="margin-right">5</property>
                         <property name="margin-start">5</property>
                         <property name="margin-end">5</property>
                         <property name="margin-top">5</property>
@@ -670,8 +630,6 @@
                       <object class="GtkLabel">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="margin-left">5</property>
-                        <property name="margin-right">5</property>
                         <property name="margin-start">5</property>
                         <property name="margin-end">5</property>
                         <property name="margin-top">5</property>
@@ -699,8 +657,6 @@
                       <object class="GtkLabel">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="margin-left">5</property>
-                        <property name="margin-right">5</property>
                         <property name="margin-start">5</property>
                         <property name="margin-end">5</property>
                         <property name="margin-top">5</property>
