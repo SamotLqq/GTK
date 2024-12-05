@@ -1,0 +1,18 @@
+Para agregar datos:
+
+INSERT INTO Auto (Patente, Duenio, Modelo) VALUES ('ABC 123', 'Tomas', "Chevrolet meriva 2006");
+
+INSERT INTO Trabajo (Descripcion, Fecha, Km, FkAuto, trabajoN) VALUES ('Servi completo', '29-08-2001', 800, 7, 1);
+
+Para conseguir datos de tabla auto por patente:
+
+SELECT Auto.*
+FROM Auto
+WHERE Auto.Patente = "ABC 123";
+
+Para buscar los trabajos realizados en un auto:
+
+SELECT Trabajo.* -- selecciona todas las columnas
+FROM Trabajo -- de trabajo
+JOIN Auto ON Trabajo.FkAuto = Auto.Id -- que en la tabla auto sus foraign keys coincidan con
+WHERE Auto.Id = 7; -- con este id
