@@ -5,8 +5,10 @@
   <object class="GtkWindow" id="trabajo_edit">
     <property name="can-focus">False</property>
     <property name="title" translatable="yes">trabajo</property>
+    <property name="modal">True</property>
     <property name="default-width">1000</property>
     <property name="default-height">600</property>
+    <property name="type-hint">dialog</property>
     <child>
       <object class="GtkScrolledWindow">
         <property name="visible">True</property>
@@ -151,11 +153,12 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkEntry" id="te_fecha">
-                            <property name="name">te_fecha</property>
+                          <object class="GtkCalendar" id="te_fecha">
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
-                            <property name="text" translatable="yes">{f}</property>
+                            <property name="year">2024</property>
+                            <property name="month">11</property>
+                            <property name="day">6</property>
                           </object>
                           <packing>
                             <property name="left-attach">1</property>
@@ -206,7 +209,7 @@
                             <property name="hscrollbar-policy">never</property>
                             <property name="shadow-type">in</property>
                             <child>
-                              <object class="GtkTextView">
+                              <object class="GtkTextView" id="te_detalle">
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
                                 <property name="hexpand">True</property>
