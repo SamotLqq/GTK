@@ -1,5 +1,2 @@
-gcc -o mi_programa solicitudes.c sqlite3/sqlite3.c -ldl -lpthread
-
-./mi_programa
-
-el programa es solo experimental y realiza una peticion simple para ver si esta funcionando todo correctamente
+gcc -o main main.c `pkg-config --cflags --libs gtk+-3.0 pango`
+./main

@@ -46,7 +46,7 @@ void handle_agregar_principal(GtkButton* button, gpointer data);
 // manejador del boton agregar trabajo en principal.glade
 void handle_agregar_trabajo_principal(GtkButton* button, gpointer data);
 // manejador de los botones del combobox
-void handle_combobox_detalle(GtkComboBox *combobox, gpointer user_data);
+void handle_combobox_detalle(GtkComboBox *combobox, gpointer data);
 // manejador del boton confriamr de trabajoEditar.glade
 void handle_confirmar_te(GtkButton* button, gpointer data);
 
@@ -388,7 +388,7 @@ void handle_editar_trabajo(GtkButton* button, gpointer data) {
     gtk_widget_hide(GTK_WIDGET(ventana_actual)); 
 }
 
-void handle_combobox_detalle(GtkComboBox *combobox, gpointer user_data) {
+void handle_combobox_detalle(GtkComboBox *combobox, gpointer data) {
     GtkTreeIter iter;
     GtkTreeModel *model;
     gchar *id_value;
@@ -407,7 +407,7 @@ void handle_combobox_detalle(GtkComboBox *combobox, gpointer user_data) {
         // Liberar memoria
         g_free(id_value);
     }
-    renderizar_trabajo((char*)user_data);
+    renderizar_trabajo((char*)data);
     // Ocultar o destruir la interfaz anterior
     GObject *ventana_actual = gtk_builder_get_object(builder, "detalle");
     gtk_widget_hide(GTK_WIDGET(ventana_actual));
