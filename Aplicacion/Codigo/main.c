@@ -3,14 +3,38 @@
 #include <string.h>
 #include <pango/pango.h>
 
-GtkBuilder *builder;
+typedef struct
+{
+    guint dia;
+    guint mes;
+    guint year;
+} Fecha;
+typedef struct
+{
+    unsigned int id;
+    gchar* km;
+    Fecha fecha;
+    gchar* descripcion;
+} Trabajo;
 // Contador global para los trabajos
 static int contadorTrabajos = 0;
+// Lista de trabajos por agregar
+static Trabajo** trabajos = NULL;
+// Funciones para trabajos
+void inicializar_trabajos();
+void agregar_trabajo(Trabajo* trabajo);
+void eliminar_trabajo(int idTrabajo);
+void editar_trabajo(int idTrabajo, Trabajo* nuevosDatos);
+void liberar_trabajos();
 
+
+
+// almacena las interfaces en tiempo de ejecucion
+GtkBuilder *builder;
 // renderiza principal.glade con funcionalidades
 void renderizar_principal();
 // renderiza detalle.glade con funcionalidades
-void renderizar_detalle(char* widgetPrevia);
+void renderizar_detalle(char* widgetBase);
 // renderiza listado.glade con funcionalidades
 void renderizar_listado();
 // renderiza detalleEditar.glade
@@ -35,6 +59,8 @@ void handle_editar_detalle(GtkButton* button, gpointer data);
 void handle_editar_listado(GtkButton* button, gpointer data);
 // manejador del boton editar de trabajo.glade
 void handle_editar_trabajo(GtkButton* button, gpointer data);
+// manejador del boton editar de principal.glade
+void handle_editar_trabajo_principal(GtkButton* button, gpointer data);
 // manejador del boton ver de principal.glade
 void handle_ver_principal(GtkButton* button, gpointer data);
 // manejador del boton ver de listado.glade
@@ -45,6 +71,8 @@ void handle_buscar_principal(GtkButton* button, gpointer data);
 void handle_agregar_principal(GtkButton* button, gpointer data);
 // manejador del boton agregar trabajo en principal.glade
 void handle_agregar_trabajo_principal(GtkButton* button, gpointer data);
+// manejador del boton eliminar trabajo en principal.glade
+void handle_eliminar_trabajo(GtkButton* button, gpointer data);
 // manejador de los botones del combobox
 void handle_combobox_detalle(GtkComboBox *combobox, gpointer data);
 // manejador del boton confriamr de trabajoEditar.glade
@@ -52,6 +80,9 @@ void handle_confirmar_te(GtkButton* button, gpointer data);
 
 
 int main(int argc, char *argv[]) {
+    // inicializar trabajos
+    inicializar_trabajos();
+
     // Inicializar GTK
     gtk_init(&argc, &argv);
     
@@ -90,7 +121,7 @@ void renderizar_principal() {
     gtk_widget_show_all(GTK_WIDGET(window));
 }
 
-void renderizar_detalle(char* widgetPrevia) {
+void renderizar_detalle(char* widgetBase) {
     // Cargar la segunda interfaz desde el archivo "mi_interfaz2.glade"
     gtk_builder_add_from_file(builder, "../interfaces/Detalle.glade", NULL);
 
@@ -104,10 +135,10 @@ void renderizar_detalle(char* widgetPrevia) {
     // Conexion de botones
     // Volver
     GObject *d_volver = gtk_builder_get_object(builder, "d_volver");
-    g_signal_connect(d_volver, "clicked", G_CALLBACK(handle_volver_detalle), widgetPrevia);
+    g_signal_connect(d_volver, "clicked", G_CALLBACK(handle_volver_detalle), widgetBase);
     // Editar
     GObject *d_editar = gtk_builder_get_object(builder, "d_editar");
-    g_signal_connect(d_editar, "clicked", G_CALLBACK(handle_editar_detalle), widgetPrevia);
+    g_signal_connect(d_editar, "clicked", G_CALLBACK(handle_editar_detalle), widgetBase);
 
     // Manejo del combo box
     GObject *d_trabajos = gtk_builder_get_object(builder, "d_trabajos");
@@ -117,7 +148,7 @@ void renderizar_detalle(char* widgetPrevia) {
     // Agregar filas al ListStore con texto y IDs
     GtkTreeIter iter;
     for (int i = 1; i <= 3; i++) {
-        gchar *text = g_strdup_printf("Opción %d", i);
+        gchar *text = g_strdup_printf("Trabajo %d", i);
         gchar *id = g_strdup_printf("t_%d", i);
 
         gtk_list_store_append(liststore, &iter);
@@ -134,7 +165,7 @@ void renderizar_detalle(char* widgetPrevia) {
     gtk_cell_layout_set_attributes(GTK_CELL_LAYOUT(d_trabajos), renderer, "text", 0, NULL);
     // Agregar el manejador de los botones del combobox
     // Conectar la señal "changed"
-    g_signal_connect(d_trabajos, "changed", G_CALLBACK(handle_combobox_detalle), widgetPrevia);
+    g_signal_connect(d_trabajos, "changed", G_CALLBACK(handle_combobox_detalle), widgetBase);
 
 
 }
@@ -244,7 +275,6 @@ void handle_volver_listado(GtkButton* button, gpointer data){
 }
 
 void handle_volver_detalle(GtkButton* button, gpointer data){
-    printf("en volver detalle: data = %s\n", (char*)data);
     if (strcmp((char*) data, "principal") == 0) {
         renderizar_principal();
     }
@@ -264,7 +294,6 @@ void handle_volver_de(GtkButton* button, gpointer data){
     char* widgetBase = widgets[1];
 
     if (strcmp(widgetPrevia, "detalle") == 0) {
-        printf("widget base: %s\n", widgetBase);
         renderizar_detalle(widgetBase);
     }
     else {
@@ -289,8 +318,8 @@ void handle_volver_te(GtkButton* button, gpointer data) {
     gchar** dataCast = (gchar**)data;
     gchar* widgetBase = dataCast[0];
     gchar* accion = dataCast[1];
-    // si es viene de editar renderizamos la ventana anterior sino solo la cerramos.
-    if (strcmp(accion, "editar") == 0) {
+    // si viene de editar renderizamos la ventana anterior sino solo la cerramos.
+    if (strcmp(accion, "editarDb") == 0) {
         renderizar_trabajo(widgetBase);
     }
     // Ocultar o destruir la interfaz anterior
@@ -304,9 +333,9 @@ void handle_ver_listado(GtkButton* button, gpointer data) {
     // Obtener el GtkEntry
     GObject *entry = gtk_builder_get_object(builder, "p_patente_buscar");
     // renderizar el detalle del auto correspondiente cuando este la db hecha.
-    char* widgetPrevia = malloc(sizeof(char)*10);
-    strcpy(widgetPrevia, "listado");
-    renderizar_detalle(widgetPrevia);
+    char* widgetBase = malloc(sizeof(char)*10);
+    strcpy(widgetBase, "listado");
+    renderizar_detalle(widgetBase);
     // Ocultar o destruir la interfaz anterior
     GObject *ventana_actual = gtk_builder_get_object(builder, "listado");
     gtk_widget_hide(GTK_WIDGET(ventana_actual));  
@@ -327,9 +356,9 @@ void handle_buscar_principal(GtkButton* button, gpointer data) {
     // Imprimir el texto (puedes hacer lo que necesites aquí)
     g_print("Texto del GtkEntry: %s\n", entry_text);
     // renderizar el detalle del auto correspondiente cuando este la db hecha.
-    char* widgetPrevia = malloc(sizeof(char)*10);
-    strcpy(widgetPrevia, "principal");
-    renderizar_detalle(widgetPrevia);
+    char* widgetBase = malloc(sizeof(char)*10);
+    strcpy(widgetBase, "principal");
+    renderizar_detalle(widgetBase);
     // Ocultar o destruir la interfaz anterior
     GObject *ventana_actual = gtk_builder_get_object(builder, "principal");
     gtk_widget_hide(GTK_WIDGET(ventana_actual));  
@@ -381,12 +410,27 @@ void handle_editar_listado(GtkButton* button, gpointer data) {
 
 void handle_editar_trabajo(GtkButton* button, gpointer data) {
     gchar *accion = malloc(sizeof(char)*15);
-    strcpy(accion, "editar");
+    strcpy(accion, "editarDb");
     renderizar_trabajoEditar((char*)data, accion);
     // Ocultar o destruir la interfaz anterior
     GObject *ventana_actual = gtk_builder_get_object(builder, "trabajo");
     gtk_widget_hide(GTK_WIDGET(ventana_actual)); 
 }
+
+void handle_editar_trabajo_principal(GtkButton* button, gpointer data) {
+    char* id = (char*)gtk_widget_get_name((GtkWidget*)button);
+    printf("id de boton editar clickeado: %s\n", id);
+
+    gchar *accion = malloc(sizeof(char)*15);
+    strcpy(accion, "editarEstado");
+    renderizar_trabajoEditar((char*)data, accion);
+}
+
+void handle_eliminar_trabajo(GtkButton* button, gpointer data) {
+    char* id = (char*)gtk_widget_get_name((GtkWidget*)button);
+    printf("id de boton eliminar clickeado: %s\n", id);
+}
+
 
 void handle_combobox_detalle(GtkComboBox *combobox, gpointer data) {
     GtkTreeIter iter;
@@ -418,8 +462,6 @@ void handle_confirmar_te(GtkButton* button, gpointer data) {
     gchar** dataCast = (gchar**)data;
     gchar* widgetBase = dataCast[0];
     gchar* accion = dataCast[1];
-    printf("WidgetBase: %s\n", widgetBase);
-    printf("Accion: %s\n", accion);
 
     // Obtener los inputs.
     GObject *entryKm = gtk_builder_get_object(builder, "te_km");
@@ -427,7 +469,7 @@ void handle_confirmar_te(GtkButton* button, gpointer data) {
     GObject *detalle = gtk_builder_get_object(builder, "te_detalle");
 
     // Extraer el texto.
-    const gchar *entryKmText = gtk_entry_get_text(GTK_ENTRY(entryKm));
+    const gchar *km = gtk_entry_get_text(GTK_ENTRY(entryKm));
     guint year, month, day;
     gtk_calendar_get_date(GTK_CALENDAR(calendar), &year, &month, &day);
     GtkTextBuffer *bufferDetalle = gtk_text_view_get_buffer(GTK_TEXT_VIEW(detalle));
@@ -435,14 +477,8 @@ void handle_confirmar_te(GtkButton* button, gpointer data) {
     gtk_text_buffer_get_bounds(bufferDetalle, &start, &end);
     gchar *textDetalle = gtk_text_buffer_get_text(bufferDetalle, &start, &end, FALSE);
 
-    // subir los datos a la bd
-    g_print("KM: %s\n", entryKmText);
-    g_print("Fecha: %u-%u-%u\n", day, month + 1, year); 
-    g_print("Detalle: %s\n", textDetalle);
-
     // si la widget base es principal.glade agregamos el trabajo en la interfaz
     if (strcmp(accion, "agregar") == 0) {
-        printf("coincidencia con agregar\n");
         // Crear GtkGrid
         GtkWidget *grid = gtk_grid_new();
         // Hacer que las columnas sean homogéneas
@@ -459,8 +495,17 @@ void handle_confirmar_te(GtkButton* button, gpointer data) {
 
         // Crear el Botón "Editar"
         GtkWidget *button_editar = gtk_button_new_with_label("Editar");
+        char buttonEditarId[25];
+        snprintf(buttonEditarId, sizeof(buttonEditarId), "editar_trabajo_%d", contadorTrabajos);
+        gtk_widget_set_name(button_editar, buttonEditarId);
+        g_signal_connect(button_editar, "clicked", G_CALLBACK(handle_editar_trabajo_principal), NULL);
         // Crear el Botón "Eliminar"
         GtkWidget *button_eliminar = gtk_button_new_with_label("Eliminar");
+        char buttonEliminarId[25];
+        snprintf(buttonEliminarId, sizeof(buttonEliminarId), "eliminar_trabajo_%d", contadorTrabajos);
+        gtk_widget_set_name(button_eliminar, buttonEliminarId);
+        g_signal_connect(button_eliminar, "clicked", G_CALLBACK(handle_eliminar_trabajo), NULL);
+
 
         // Agregar el Label a la primera columna del Grid
         gtk_grid_attach(GTK_GRID(grid), label, 0, 0, 1, 1);  // (grid, widget, columna, fila, ancho, alto)
@@ -477,8 +522,11 @@ void handle_confirmar_te(GtkButton* button, gpointer data) {
         // Mostrar los widgets recién creados
         gtk_widget_show_all(grid);
     }
-    else {
+    else if (strcmp(accion, "editarDb") == 0){
         renderizar_trabajo(widgetBase);
+    }
+    else { // editarEstado
+
     }
 
     g_free(textDetalle);
@@ -489,4 +537,52 @@ void handle_confirmar_te(GtkButton* button, gpointer data) {
     GObject *ventana_actual = gtk_builder_get_object(builder, "trabajo_edit");
     gtk_widget_hide(GTK_WIDGET(ventana_actual));
 
+}
+
+// Funciones para el estado global trabajos.
+
+void inicializar_trabajos() {
+    trabajos = malloc(sizeof(Trabajo*)*50);
+    if (trabajos == NULL) {
+        perror("Error al inicializar la lista de trabajos");
+        exit(EXIT_FAILURE);
+    }
+}
+void agregar_trabajo(Trabajo* trabajo) {
+    trabajos[contadorTrabajos] = trabajo;
+    contadorTrabajos++;
+}
+void eliminar_trabajo(int idTrabajo) {
+    int encontrado = 0;
+    for (int i = 0; i < contadorTrabajos; i++) {
+        if (encontrado) {
+            trabajos[i-1] = trabajos[i];
+        }
+        else if (trabajos[i]->id == idTrabajo) {
+            encontrado = 1;
+            free(trabajos[i]->descripcion);
+            free(trabajos[i]);
+            trabajos[i] = NULL;
+        }  
+    }
+    if (encontrado) {
+        contadorTrabajos--;
+    }
+}
+void editar_trabajo(int idTrabajo, Trabajo* nuevosDatos) {
+    for (int i = 0; i < contadorTrabajos; i++) {
+        if (trabajos[i]->id == idTrabajo) {
+            free(trabajos[i]->descripcion);
+            free(trabajos[i]);
+            trabajos[i] = nuevosDatos;
+        }  
+    }
+}
+
+void liberar_trabajos() {
+    for (int i = 0; i < contadorTrabajos; i++) {
+        free(trabajos[i]->descripcion);
+        free(trabajos[i]);
+    }
+    free(trabajos);
 }
