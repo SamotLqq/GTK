@@ -153,7 +153,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkCalendar">
+                          <object class="GtkCalendar" id="te_fecha">
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
                             <property name="year">2024</property>
@@ -209,7 +209,7 @@
                             <property name="hscrollbar-policy">never</property>
                             <property name="shadow-type">in</property>
                             <child>
-                              <object class="GtkTextView">
+                              <object class="GtkTextView" id="te_detalle">
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
                                 <property name="hexpand">True</property>
