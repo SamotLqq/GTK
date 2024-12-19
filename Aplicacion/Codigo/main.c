@@ -13,15 +13,20 @@ typedef struct
 {
     gchar* id;
     gchar* km;
+    gchar* titulo;
     Fecha* fecha;
     gchar* descripcion;
 } Trabajo;
+
 // Contador global para los trabajos agregados contando eliminados
 static int contadorTrabajosTotal = 0;
 // Contador global para los trabajos actuales
 static int contadorTrabajosActual = 0;
 // Lista de trabajos por agregar
 static Trabajo** trabajos = NULL;
+// tabla hash para guardar los widgets de los labels
+GHashTable *tableWidgetsLabel = NULL;
+
 // Funciones para trabajos
 void inicializar_trabajos();
 void agregar_trabajo(Trabajo* trabajo);
@@ -57,7 +62,7 @@ GtkBuilder *builder;
 // renderiza principal.glade con funcionalidades
 void renderizar_principal();
 // renderiza un trabajo en principal.glade
-void renderizar_trabajo_principal(int numeralId);
+void renderizar_trabajo_principal(int numeralId, char* tituloTrabajo);
 // renderiza detalle.glade con funcionalidades
 void renderizar_detalle(char* widgetBase);
 // renderiza listado.glade con funcionalidades
@@ -104,8 +109,11 @@ void handle_combobox_detalle(GtkComboBox *combobox, gpointer data);
 void handle_confirmar_te(GtkButton* button, gpointer data);
 
 int main(int argc, char *argv[]) {
-    // inicializar trabajos
+    // Inicializar trabajos
     inicializar_trabajos();
+
+    // Inicializamos la tabla hash
+    tableWidgetsLabel = g_hash_table_new(g_str_hash, g_str_equal);
 
     // Inicializar GTK
     gtk_init(&argc, &argv);
@@ -131,7 +139,7 @@ void renderizar_principal() {
     for (int i = 0; i < contadorTrabajosActual; i++) {
         char* trabajoId = trabajos[i]->id;
         int idi = obtener_id_numerico(trabajoId);        
-        renderizar_trabajo_principal(idi);
+        renderizar_trabajo_principal(idi, trabajos[i]->titulo);
     }
     // Conexion de botones
     // Buscar
@@ -154,7 +162,7 @@ void renderizar_principal() {
     gtk_widget_show_all(GTK_WIDGET(window));
 }
 
-void renderizar_trabajo_principal(int numeralId) {
+void renderizar_trabajo_principal(int numeralId, char* tituloTrabajo) {
     // Crear GtkGrid
     GtkWidget *grid = gtk_grid_new();
     // Hacer que las columnas sean homogéneas
@@ -166,14 +174,26 @@ void renderizar_trabajo_principal(int numeralId) {
     snprintf(gridId, 25, "trabajo_%d", numeralId);
     gtk_widget_set_name(grid, gridId);
 
-    // Crear un nuevo label con el texto "Trabajo i"
-    char label_text[255];
-    snprintf(label_text, sizeof(label_text), "<markup><span foreground='black' font='Garuda10' variant='small-caps' font_size='large'>Trabajo %d</span></markup>", numeralId);
+    // Crear un nuevo label con el titulo del trabajo
+    char labelText[255];
+    snprintf(labelText, sizeof(labelText), "<markup><span foreground='black' font='Garuda10' variant='small-caps' font_size='small'>%s</span></markup>", tituloTrabajo);
     GtkWidget *label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), label_text);
+    gtk_label_set_markup(GTK_LABEL(label), labelText);
     char labelId[25];
     snprintf(labelId, 24, "label_trabajo_%d", numeralId);
     gtk_widget_set_name(label, labelId);
+    // Configurar que el GtkLabel tenga un ancho fijo (por ejemplo, 200 píxeles)
+    gtk_widget_set_size_request(label, 20, -1);
+    // Permitir el salto de línea
+    gtk_label_set_line_wrap(GTK_LABEL(label), TRUE);
+    // Establecer el modo de ajuste de línea para que divida las palabras si es necesario
+    gtk_label_set_line_wrap_mode(GTK_LABEL(label), PANGO_WRAP_WORD_CHAR);
+    // Asegurarse de que no se recorte el texto
+    gtk_label_set_ellipsize(GTK_LABEL(label), PANGO_ELLIPSIZE_NONE);
+    // Centrar el texto
+    gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_CENTER);
+    // Agregamos la widget del label a la tabla hash
+    g_hash_table_insert(tableWidgetsLabel, g_strdup(labelId), label);
 
     // Crear el Botón "Editar"
     GtkWidget *button_editar = gtk_button_new_with_label("Editar");
@@ -187,6 +207,8 @@ void renderizar_trabajo_principal(int numeralId) {
     snprintf(buttonEliminarId, 24, "eliminar_trabajo_%d", numeralId);
     gtk_widget_set_name(button_eliminar, buttonEliminarId);
     g_signal_connect(button_eliminar, "clicked", G_CALLBACK(handle_eliminar_trabajo), NULL);
+    // Agregar un margen de 5 píxeles a la derecha del botón
+    gtk_widget_set_margin_end(button_eliminar, 25);
 
 
     // Agregar el Label a la primera columna del Grid
@@ -567,6 +589,10 @@ void handle_eliminar_trabajo(GtkButton* button, gpointer data) {
         // Liberar la lista de hijos
         g_list_free(children);
     }
+    // Eliminamos el widget del label asociado de la tabla hash
+    char labelId[25];
+    snprintf(labelId, 24, "label_trabajo_%d", id);
+    g_hash_table_remove(tableWidgetsLabel, labelId);
     // Eliminamos el trabajo del estado global de trabajos
     eliminar_trabajo(trabajoId);
     // Liberamos la memoria ocupada por el id usado como argumento
@@ -605,11 +631,13 @@ void handle_confirmar_te(GtkButton* button, gpointer data) {
     gchar* accion = dataCast[1];
 
     // Obtener los inputs.
+    GObject *entryTitulo = gtk_builder_get_object(builder, "te_titulo");
     GObject *entryKm = gtk_builder_get_object(builder, "te_km");
     GObject *calendar = gtk_builder_get_object(builder, "te_fecha");
     GObject *detalle = gtk_builder_get_object(builder, "te_detalle");
 
     // Extraer el texto.
+    const gchar *titulo = gtk_entry_get_text(GTK_ENTRY(entryTitulo));
     const gchar *km = gtk_entry_get_text(GTK_ENTRY(entryKm));
     guint year, month, day;
     gtk_calendar_get_date(GTK_CALENDAR(calendar), &year, &month, &day);
@@ -623,6 +651,7 @@ void handle_confirmar_te(GtkButton* button, gpointer data) {
     gchar *textDetalle = gtk_text_buffer_get_text(bufferDetalle, &start, &end, FALSE);
     // Guardamos el texto en variables duplicadas
     Trabajo* trabajo = malloc(sizeof(Trabajo));
+    trabajo->titulo = g_strdup(titulo);
     trabajo->km = g_strdup(km);
     trabajo->descripcion = textDetalle;
     trabajo->fecha = fecha;
@@ -635,12 +664,13 @@ void handle_confirmar_te(GtkButton* button, gpointer data) {
         // agregamos el trabajo al estado global
         agregar_trabajo(trabajo);
         // Mostrar el trabajo agregado en principal.glade
-        renderizar_trabajo_principal(contadorTrabajosTotal);
+        renderizar_trabajo_principal(contadorTrabajosTotal, trabajo->titulo);
     }
     else if (strcmp(accion, "editarDb") == 0){
         renderizar_trabajo(widgetBase);
         // Editar trabajo en db
         free(trabajo->km);
+        free(trabajo->titulo);
         free(trabajo->fecha);
         free(trabajo->descripcion);
         free(trabajo);
@@ -649,9 +679,16 @@ void handle_confirmar_te(GtkButton* button, gpointer data) {
     else { // editarEstado
         // Editar los datos al estado
         gchar* trabajoId = dataCast[2];
-        printf("editando trabajo con id: %s en estado\n", trabajoId);
         trabajo->id = trabajoId;
         editar_trabajo(trabajoId, trabajo);
+        // editar el titulo en la widget label
+        int id = obtener_id_numerico(trabajoId);
+        char labelId[25];
+        snprintf(labelId, 24, "label_trabajo_%d", id);
+        GtkWidget *label = GTK_WIDGET(g_hash_table_lookup(tableWidgetsLabel, labelId));
+        char labelText[255];
+        snprintf(labelText, sizeof(labelText), "<markup><span foreground='black' font='Garuda10' variant='small-caps' font_size='small'>%s</span></markup>", trabajo->titulo);
+        gtk_label_set_markup(GTK_LABEL(label), labelText);
     }
     free(accion);
     free(dataCast);
@@ -688,6 +725,7 @@ void eliminar_trabajo(char* idTrabajo) {
             free(trabajos[i]->descripcion);
             free(trabajos[i]->fecha);
             free(trabajos[i]->km);
+            free(trabajos[i]->titulo);
             free(trabajos[i]->id);
             free(trabajos[i]);
             trabajos[i] = NULL;
@@ -702,6 +740,10 @@ void editar_trabajo(char* idTrabajo, Trabajo* nuevosDatos) {
     for (int i = 0; i < contadorTrabajosActual; i++) {
         if (strcmp(trabajos[i]->id, idTrabajo) == 0) {
             free(trabajos[i]->descripcion);
+            free(trabajos[i]->fecha);
+            free(trabajos[i]->id);
+            free(trabajos[i]->titulo);
+            free(trabajos[i]->km);
             free(trabajos[i]);
             trabajos[i] = nuevosDatos;
         }  
@@ -713,6 +755,7 @@ void liberar_trabajos() {
         free(trabajos[i]->descripcion);
         free(trabajos[i]->fecha);
         free(trabajos[i]->km);
+        free(trabajos[i]->titulo);
         free(trabajos[i]->id);
         free(trabajos[i]);
     }
@@ -723,6 +766,7 @@ void imprimir_trabajos() {
     for (int i = 0; i < contadorTrabajosActual; i++) {
         printf("id: %s - ", trabajos[i]->id);
         printf("km: %s - ", trabajos[i]->km);
+        printf("titulo: %s - ", trabajos[i]->titulo);
         printf("fecha: %d/%d/%d - ", trabajos[i]->fecha->dia, trabajos[i]->fecha->mes, trabajos[i]->fecha->year);
         printf("descripcion: %s\n", trabajos[i]->descripcion);
     }
