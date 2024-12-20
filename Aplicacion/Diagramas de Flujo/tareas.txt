@@ -1,5 +1,3 @@
 en el titulo de trabajo.glade mostrar el numero
 en el titulo de trabajoeditar.glade mostrar el numero
-cada vez q elimias un trabajo en principal actualizar
-ponerle titulos a los trabajos
 renderizar los datos acutales en editar trabajo
