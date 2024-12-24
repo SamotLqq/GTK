@@ -1,3 +1,8 @@
 en el titulo de trabajo.glade mostrar el numero
 en el titulo de trabajoeditar.glade mostrar el numero
 renderizar los datos acutales en editar trabajo
+al eliminar un trabajo eliminar su label de la tabla hash
+al editar un trabajo actualizar su label en la tabla hash
+al liberar trabajos liberar labels de la tabla hash
+liberar las estructuras de datos de los handlers no utilizados en la funcion de destruccion de ventana gtk_main_quit.
+        printf("falta pasar id del trabajo y del duenio y luego modificar trabajo relacionado a duenio en db\n");
