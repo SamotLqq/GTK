@@ -15,9 +15,10 @@ Trabajo** inicializar_trabajos() {
 }
 
 void agregar_trabajo(Trabajo** trabajos, Trabajo* trabajo, int* contadorTrabajosActual, int* contadorTrabajosTotal) {
+    printf("en agregar trabajo cta = %d\n", *contadorTrabajosActual);
     trabajos[*contadorTrabajosActual] = trabajo;
-    *contadorTrabajosTotal++;
-    *contadorTrabajosActual++;
+    (*contadorTrabajosTotal)++;
+    (*contadorTrabajosActual)++;
     imprimir_trabajos(trabajos, contadorTrabajosActual);
 }
 
@@ -39,7 +40,7 @@ void eliminar_trabajo(Trabajo** trabajos, char* idTrabajo, int* contadorTrabajos
         }  
     }
     if (encontrado) {
-        *contadorTrabajosActual--;
+        (*contadorTrabajosActual)--;
     }
 }
 
@@ -56,7 +57,7 @@ void editar_trabajo(Trabajo** trabajos, Trabajo* nuevosDatos, char* idTrabajo, i
         }  
     }
 }
-
+// mas que liberar esto deberia ser vaciar.
 void liberar_trabajos(Trabajo** trabajos, int* contadorTrabajosActual) {
     for (int i = 0; i < *contadorTrabajosActual; i++) {
         free(trabajos[i]->descripcion);
@@ -65,11 +66,12 @@ void liberar_trabajos(Trabajo** trabajos, int* contadorTrabajosActual) {
         free(trabajos[i]->titulo);
         free(trabajos[i]->id);
         free(trabajos[i]);
+        trabajos[i] = NULL;
     }
 }
 
 void imprimir_trabajos(Trabajo** trabajos, int* contadorTrabajosActual) {
-    printf("Trabajos:\n");
+    printf("Trabajos (%d):\n", *contadorTrabajosActual);
     for (int i = 0; i < *contadorTrabajosActual; i++) {
         printf("id: %s - ", trabajos[i]->id);
         printf("km: %s - ", trabajos[i]->km);

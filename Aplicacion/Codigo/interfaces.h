@@ -4,50 +4,44 @@
 #include <gtk/gtk.h>
 #include "trabajo.h"
 
-// estructura para argumentos de los handlers
-typedef struct 
-{
-    GtkBuilder *builder;
-    Trabajo** trabajos;
-    int* contadorTrabajosActual;
-    int* contadorTrabajosTotal;
-    char* widgetBase;
-    char* widgetPrevia;
-    gchar* accion;
-    gchar* trabajoId;
-    GHashTable *tableWidgetsLabel;
-} HandlerArgs;
 
-typedef struct 
+
+typedef struct
 {
     GtkBuilder* builder;
+    GHashTable *tableWidgetsLabel;
     Trabajo** trabajos;
-    int numeralId;
+    int* contadorTrabajosTotal;
+    int* contadorTrabajosActual;
+} Contexto;
+
+typedef struct
+{
+    Contexto* ctx;
     char* tituloTrabajo;
     char* widgetBase;
     char* widgetPrevia;
     char* trabajoId;
     char* accion;
-    int* contadorTrabajosActual;
-    int* contadorTrabajoTotal;
-    GHashTable *tableWidgetsLabel;
-} RendererArgs;
+} Args;
 
+// Devuelve una nueva instancia de args con los argumentos inicializados en NULL.
+Args* inicializar_args();
 
 // renderiza principal.glade con funcionalidades
-void renderizar_principal(RendererArgs* args);
+void renderizar_principal(Args* args);
 // renderiza un trabajo en principal.glade
-void renderizar_trabajo_principal(RendererArgs* args);
+void renderizar_trabajo_principal(Args* args);
 // renderiza detalle.glade con funcionalidades
-void renderizar_detalle(RendererArgs* args);
+void renderizar_detalle(Args* args);
 // renderiza listado.glade con funcionalidades
-void renderizar_listado(RendererArgs* args);
+void renderizar_listado(Args* args);
 // renderiza detalleEditar.glade
-void renderizar_detalle_editar(RendererArgs* args);
+void renderizar_detalle_editar(Args* args);
 // renderiza trabajo.glade
-void renderizar_trabajo (RendererArgs* args);
+void renderizar_trabajo (Args* args);
 // renderiza trabajoEditar.glade
-void renderizar_trabajo_editar (RendererArgs* args);
+void renderizar_trabajo_editar (Args* args);
 // manejador del boton volver a principal.glade desde listado.glade
 void handle_volver_listado(GtkButton* button, gpointer data);
 // manejador del boton volver desde detalle.glade

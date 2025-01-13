@@ -7,62 +7,50 @@
 #include <gtk/gtk.h>
 #include <pango/pango.h>
 
-void renderizar_principal(RendererArgs* args) {
-    GtkBuilder* builder = args->builder;
-    GHashTable *tableWidgetsLabel = args->tableWidgetsLabel;
-    Trabajo** trabajos = args->trabajos;
-    int* contadorTrabajosActual = args->contadorTrabajosActual; 
-    int* contadorTrabajoTotal = args->contadorTrabajoTotal;
+Args* inicializar_args() {
+    Args* args = malloc(sizeof(Args));
+    args->ctx = NULL;
+    args->accion = NULL;
+    args->tituloTrabajo = NULL;
+    args->trabajoId = NULL;
+    args->widgetBase = NULL;
+    args->widgetPrevia = NULL;
+    return args;
+}
+
+void renderizar_principal(Args* args) {
+    GtkBuilder* builder = args->ctx->builder;
+    Trabajo** trabajos = args->ctx->trabajos;
+    int* contadorTrabajosActual = args->ctx->contadorTrabajosActual; 
     // Agregamos la interfaz principal.glade al builder
     gtk_builder_add_from_file(builder, "../interfaces/Principal.glade", NULL);
     // Renderizar los trabajos actuales en el estado
     for (int i = 0; i < *contadorTrabajosActual; i++) {
-        char* trabajoId = trabajos[i]->id;
-        int idi = obtener_id_numerico(trabajoId);        
-        RendererArgs* rendererArgs = malloc(sizeof(RendererArgs));
-        rendererArgs->builder = builder;
-        rendererArgs->numeralId = idi;
-        rendererArgs->tituloTrabajo = trabajos[i]->titulo;
-        rendererArgs->trabajos = trabajos;
-        rendererArgs->contadorTrabajosActual = contadorTrabajosActual;
-        rendererArgs->contadorTrabajoTotal = contadorTrabajoTotal;
-        rendererArgs->tableWidgetsLabel = tableWidgetsLabel;
-        renderizar_trabajo_principal(rendererArgs);
+        Args* rtpArgs = inicializar_args();
+        rtpArgs->trabajoId = g_strdup(trabajos[i]->id);
+        rtpArgs->tituloTrabajo =  g_strdup(trabajos[i]->titulo);
+        rtpArgs->ctx = args->ctx;
+        renderizar_trabajo_principal(rtpArgs);
     }
     // Conexion de botones
     // Buscar
-    HandlerArgs* argsPbuscar = malloc(sizeof(HandlerArgs));
-    argsPbuscar->builder = builder;
-    argsPbuscar->contadorTrabajosActual = contadorTrabajosActual;
-    argsPbuscar->contadorTrabajosTotal = contadorTrabajoTotal;
-    argsPbuscar->trabajos = trabajos;
-    argsPbuscar->tableWidgetsLabel = tableWidgetsLabel;
+    Args* argsPbuscar = inicializar_args();
+    argsPbuscar->ctx = args->ctx;
     GObject *pBuscar = gtk_builder_get_object(builder, "p_buscar");
     g_signal_connect(pBuscar, "clicked", G_CALLBACK(handle_buscar_principal), argsPbuscar);
     // Ver listado
-    HandlerArgs* argsPlistado = malloc(sizeof(HandlerArgs));
-    argsPlistado->builder = builder;
-    argsPlistado->contadorTrabajosActual = contadorTrabajosActual;
-    argsPlistado->contadorTrabajosTotal = contadorTrabajoTotal;
-    argsPlistado->trabajos = trabajos;
-    argsPlistado->tableWidgetsLabel = tableWidgetsLabel;
+    Args* argsPlistado = inicializar_args();
+    argsPlistado->ctx = args->ctx;
     GObject *pListado = gtk_builder_get_object(builder, "p_listado");
     g_signal_connect(pListado, "clicked", G_CALLBACK(handle_ver_principal), argsPlistado);
     // Agregar
-    HandlerArgs* argsPagregar = malloc(sizeof(HandlerArgs));
-    argsPagregar->builder = builder;
-    argsPagregar->trabajos = trabajos;
-    argsPagregar->contadorTrabajosActual = contadorTrabajosActual;
-    argsPagregar->contadorTrabajosTotal = contadorTrabajoTotal;
+    Args* argsPagregar = inicializar_args();
+    argsPagregar->ctx = args->ctx;
     GObject *pAgregar = gtk_builder_get_object(builder, "p_agregar");
     g_signal_connect(pAgregar, "clicked", G_CALLBACK(handle_agregar_principal), argsPagregar);
     // Agregar Trabajo
-    HandlerArgs* argsPagregarTrabajo = malloc(sizeof(HandlerArgs));
-    argsPagregarTrabajo->builder = builder;
-    argsPagregarTrabajo->trabajos = trabajos;
-    argsPagregarTrabajo->contadorTrabajosActual = contadorTrabajosActual;
-    argsPagregarTrabajo->contadorTrabajosTotal = contadorTrabajoTotal;
-    argsPagregarTrabajo->tableWidgetsLabel = tableWidgetsLabel;
+    Args* argsPagregarTrabajo = inicializar_args();
+    argsPagregarTrabajo->ctx = args->ctx;
     GObject *pAgregarTrabajo = gtk_builder_get_object(builder, "p_agregar_trabajo");
     g_signal_connect(pAgregarTrabajo, "clicked", G_CALLBACK(handle_agregar_trabajo_principal), argsPagregarTrabajo);
 
@@ -76,13 +64,10 @@ void renderizar_principal(RendererArgs* args) {
     free(args);
 }
 
-void renderizar_trabajo_principal(RendererArgs* args) {
-    GtkBuilder* builder = args->builder;
-    GHashTable *tableWidgetsLabel = args->tableWidgetsLabel;
-    Trabajo** trabajos = args->trabajos;
-    int* contadorTrabajosActual = args->contadorTrabajosActual;
-    int* contadorTrabajosTotal = args->contadorTrabajoTotal;
-    int numeralId = args->numeralId;
+void renderizar_trabajo_principal(Args* args) {
+    GtkBuilder* builder = args->ctx->builder;
+    GHashTable *tableWidgetsLabel = args->ctx->tableWidgetsLabel;
+    int numeralId = obtener_id_numerico(args->trabajoId);
     char* tituloTrabajo = args->tituloTrabajo;
 
     char* widgetBase = malloc(sizeof(char)*25);
@@ -125,27 +110,20 @@ void renderizar_trabajo_principal(RendererArgs* args) {
     char buttonEditarId[25];
     snprintf(buttonEditarId, 24, "editar_trabajo_%d", numeralId);
     gtk_widget_set_name(buttonEditar, buttonEditarId);
-    HandlerArgs* argsEditarTp = malloc(sizeof(HandlerArgs));
-    argsEditarTp->builder = builder;
+    Args* argsEditarTp = inicializar_args();
+    argsEditarTp->ctx = args->ctx;
     argsEditarTp->widgetBase = widgetBase;
-    argsEditarTp->contadorTrabajosActual = contadorTrabajosActual;
-    argsEditarTp->contadorTrabajosTotal = contadorTrabajosTotal;
-    argsEditarTp->trabajos = trabajos;
-    argsEditarTp->tableWidgetsLabel = tableWidgetsLabel;
     g_signal_connect(buttonEditar, "clicked", G_CALLBACK(handle_editar_trabajo_principal), argsEditarTp);
     // Crear el Botón "Eliminar"
     GtkWidget *buttonEliminar = gtk_button_new_with_label("Eliminar");
+    gtk_widget_set_margin_end(buttonEliminar, 25); // Agregar un margen de 5 píxeles a la derecha del botón
     char buttonEliminarId[25];
     snprintf(buttonEliminarId, 24, "eliminar_trabajo_%d", numeralId);
     gtk_widget_set_name(buttonEliminar, buttonEliminarId);
-    HandlerArgs* argsEliminarTp = malloc(sizeof(HandlerArgs));
-    argsEliminarTp->builder = builder;
-    argsEliminarTp->contadorTrabajosActual = contadorTrabajosActual;
-    argsEliminarTp->trabajos = trabajos;
-    argsEliminarTp->tableWidgetsLabel = tableWidgetsLabel;
+    Args* argsEliminarTp = inicializar_args();
+    argsEliminarTp->ctx = args->ctx;
     g_signal_connect(buttonEliminar, "clicked", G_CALLBACK(handle_eliminar_trabajo), argsEliminarTp);
-    // Agregar un margen de 5 píxeles a la derecha del botón
-    gtk_widget_set_margin_end(buttonEliminar, 25);
+
 
     // Agregar el Label a la primera columna del Grid
     gtk_grid_attach(GTK_GRID(grid), label, 0, 0, 1, 1);  // (grid, widget, columna, fila, ancho, alto)
@@ -155,22 +133,20 @@ void renderizar_trabajo_principal(RendererArgs* args) {
     gtk_grid_attach(GTK_GRID(grid), buttonEliminar, 2, 0, 1, 1);
 
     // Agregar el GtkGrid al GtkBox
-    GObject* box_trabajos = gtk_builder_get_object(builder, "box_trabajos");//box_trabajos es el id/name de una box en principal.glade
-    gtk_box_pack_start(GTK_BOX(box_trabajos), grid, FALSE, FALSE, 5);
+    GObject* boxTrabajos = gtk_builder_get_object(builder, "box_trabajos");//box_trabajos es el id/name de una box en principal.glade
+    gtk_box_pack_start(GTK_BOX(boxTrabajos), grid, FALSE, FALSE, 5);
     
     // Mostrar los widgets recién creados
     gtk_widget_show_all(grid);
 
     // liberar rendererargs
-    free(args);
+    //free(args->trabajoId);
+    //free(args->tituloTrabajo);
+    //free(args);
 }
 
-void renderizar_detalle(RendererArgs* args) {
-    GtkBuilder* builder = args->builder;
-    GHashTable* tableWidgetsLabel = args->tableWidgetsLabel;
-    int* contadorTrabajosActual = args->contadorTrabajosActual;
-    int* contadorTrabajosTotal = args->contadorTrabajoTotal;
-    Trabajo** trabajos = args->trabajos;
+void renderizar_detalle(Args* args) {
+    GtkBuilder* builder = args->ctx->builder;
     char* widgetBase = args->widgetBase;
 
     // Cargar la segunda interfaz desde el archivo "mi_interfaz2.glade"
@@ -185,23 +161,15 @@ void renderizar_detalle(RendererArgs* args) {
 
     // Conexion de botones
     // Volver
-    HandlerArgs* argsVolverDetalle = malloc(sizeof(HandlerArgs));
-    argsVolverDetalle->builder = builder;
-    argsVolverDetalle->widgetBase = widgetBase;
-    argsVolverDetalle->contadorTrabajosActual = contadorTrabajosActual;
-    argsVolverDetalle->contadorTrabajosTotal = contadorTrabajosTotal;
-    argsVolverDetalle->trabajos = trabajos;
-    argsVolverDetalle->tableWidgetsLabel = tableWidgetsLabel;
+    Args* argsVolverDetalle = inicializar_args();
+    argsVolverDetalle->ctx = args->ctx;
+    argsVolverDetalle->widgetBase = g_strdup(widgetBase);
     GObject *dVolver = gtk_builder_get_object(builder, "d_volver");
     g_signal_connect(dVolver, "clicked", G_CALLBACK(handle_volver_detalle), argsVolverDetalle);
     // Editar
-    HandlerArgs* argsEditarDetalle = malloc(sizeof(HandlerArgs));
-    argsEditarDetalle->builder = builder;
-    argsEditarDetalle->contadorTrabajosActual = contadorTrabajosActual;
-    argsEditarDetalle->contadorTrabajosTotal = contadorTrabajosTotal;
-    argsEditarDetalle->trabajos = trabajos;
-    argsEditarDetalle->widgetBase = widgetBase;
-    argsEditarDetalle->tableWidgetsLabel = tableWidgetsLabel;
+    Args* argsEditarDetalle = inicializar_args();
+    argsEditarDetalle->ctx = args->ctx;
+    argsEditarDetalle->widgetBase = g_strdup(widgetBase);
     GObject *dEditar = gtk_builder_get_object(builder, "d_editar");
     g_signal_connect(dEditar, "clicked", G_CALLBACK(handle_editar_detalle), argsEditarDetalle);
 
@@ -230,25 +198,18 @@ void renderizar_detalle(RendererArgs* args) {
     gtk_cell_layout_set_attributes(GTK_CELL_LAYOUT(dTrabajos), renderer, "text", 0, NULL);
     // Agregar el manejador de los botones del combobox
     // Conectar la señal "changed"
-    HandlerArgs* argsComboBoxDetalle = malloc(sizeof(HandlerArgs));
-    argsComboBoxDetalle->builder = builder;
-    argsComboBoxDetalle->trabajos = trabajos;
-    argsComboBoxDetalle->contadorTrabajosActual = contadorTrabajosActual;
-    argsComboBoxDetalle->contadorTrabajosTotal = contadorTrabajosTotal;
-    argsComboBoxDetalle->widgetBase = widgetBase;
-    argsComboBoxDetalle->tableWidgetsLabel = tableWidgetsLabel;
+    Args* argsComboBoxDetalle = inicializar_args();
+    argsComboBoxDetalle->ctx = args->ctx;
+    argsComboBoxDetalle->widgetBase = g_strdup(widgetBase);
     g_signal_connect(dTrabajos, "changed", G_CALLBACK(handle_combobox_detalle), argsComboBoxDetalle);
 
     // liberamos args
     free(args);
+    free(widgetBase);
 }
 
-void renderizar_listado(RendererArgs* args) {
-    GtkBuilder* builder = args->builder;
-    Trabajo** trabajos = args->trabajos;
-    GHashTable* tableWidgetsLabel = args->tableWidgetsLabel;
-    int* contadorTrabajosActual = args->contadorTrabajosActual;
-    int* contadorTrabajosTotal = args->contadorTrabajoTotal;
+void renderizar_listado(Args* args) {
+    GtkBuilder* builder = args->ctx->builder;
 
     // Cargar la segunda interfaz desde el archivo "mi_interfaz2.glade"
     gtk_builder_add_from_file(builder, "../interfaces/Listado.glade", NULL);
@@ -262,24 +223,12 @@ void renderizar_listado(RendererArgs* args) {
 
     // Conexion de botones
     // Ver (obtenemos el auto que se encuentra en la fila del boton ver elegido y aplicamos handle_buscar)
-    HandlerArgs* argsLver1 = malloc(sizeof(HandlerArgs));
-    HandlerArgs* argsLver2 = malloc(sizeof(HandlerArgs));
-    HandlerArgs* argsLver3 = malloc(sizeof(HandlerArgs));
-    argsLver1->builder = builder;
-    argsLver1->contadorTrabajosActual = contadorTrabajosActual;
-    argsLver1->contadorTrabajosTotal = contadorTrabajosTotal;
-    argsLver1->trabajos = trabajos;
-    argsLver1->tableWidgetsLabel = tableWidgetsLabel;
-    argsLver2->builder = builder;
-    argsLver2->contadorTrabajosActual = contadorTrabajosActual;
-    argsLver2->contadorTrabajosTotal = contadorTrabajosTotal;
-    argsLver2->trabajos = trabajos;
-    argsLver2->tableWidgetsLabel = tableWidgetsLabel;
-    argsLver3->builder = builder;
-    argsLver3->contadorTrabajosActual = contadorTrabajosActual;
-    argsLver3->contadorTrabajosTotal = contadorTrabajosTotal;
-    argsLver3->trabajos = trabajos;
-    argsLver3->tableWidgetsLabel = tableWidgetsLabel;
+    Args* argsLver1 = inicializar_args();
+    Args* argsLver2 = inicializar_args();
+    Args* argsLver3 = inicializar_args();
+    argsLver1->ctx = args->ctx;
+    argsLver2->ctx = args->ctx;
+    argsLver3->ctx = args->ctx;
     GObject *lVer1 = gtk_builder_get_object(builder, "l_ver_1");
     g_signal_connect(lVer1, "clicked", G_CALLBACK(handle_ver_listado), argsLver1);
     GObject *lVer2 = gtk_builder_get_object(builder, "l_ver_2");
@@ -289,24 +238,12 @@ void renderizar_listado(RendererArgs* args) {
     
 
     // Editar (obtenemos el auto que se encuentra en la fila del boton editar elegido y aplicamos handle_editar)
-    HandlerArgs* argsLeditar1 = malloc(sizeof(HandlerArgs));
-    HandlerArgs* argsLeditar2 = malloc(sizeof(HandlerArgs));
-    HandlerArgs* argsLeditar3 = malloc(sizeof(HandlerArgs));
-    argsLeditar1->builder = builder;
-    argsLeditar1->trabajos = trabajos;
-    argsLeditar1->contadorTrabajosActual = contadorTrabajosActual;
-    argsLeditar1->contadorTrabajosTotal = contadorTrabajosTotal;
-    argsLeditar1->tableWidgetsLabel = tableWidgetsLabel;
-    argsLeditar2->builder = builder;
-    argsLeditar2->trabajos = trabajos;
-    argsLeditar2->contadorTrabajosActual = contadorTrabajosActual;
-    argsLeditar2->contadorTrabajosTotal = contadorTrabajosTotal;
-    argsLeditar2->tableWidgetsLabel = tableWidgetsLabel;
-    argsLeditar3->builder = builder;
-    argsLeditar3->trabajos = trabajos;
-    argsLeditar3->contadorTrabajosActual = contadorTrabajosActual;
-    argsLeditar3->contadorTrabajosTotal = contadorTrabajosTotal;
-    argsLeditar1->tableWidgetsLabel = tableWidgetsLabel;
+    Args* argsLeditar1 = inicializar_args();
+    Args* argsLeditar2 = inicializar_args();
+    Args* argsLeditar3 = inicializar_args();
+    argsLeditar1->ctx = args->ctx;
+    argsLeditar2->ctx = args->ctx;
+    argsLeditar3->ctx = args->ctx;
     GObject *lEditar1 = gtk_builder_get_object(builder, "l_editar_1");
     g_signal_connect(lEditar1, "clicked", G_CALLBACK(handle_editar_listado), argsLeditar1);
     GObject *lEditar2 = gtk_builder_get_object(builder, "l_editar_2");
@@ -315,12 +252,12 @@ void renderizar_listado(RendererArgs* args) {
     g_signal_connect(lEditar3, "clicked", G_CALLBACK(handle_editar_listado), argsLeditar3);
 
     // Eliminar
-    HandlerArgs* argsLeliminar1 = malloc(sizeof(HandlerArgs));
-    HandlerArgs* argsLeliminar2 = malloc(sizeof(HandlerArgs));
-    HandlerArgs* argsLeliminar3 = malloc(sizeof(HandlerArgs));
-    argsLeliminar1->builder = builder;
-    argsLeliminar2->builder = builder;
-    argsLeliminar3->builder = builder;
+    Args* argsLeliminar1 = inicializar_args();
+    Args* argsLeliminar2 = inicializar_args();
+    Args* argsLeliminar3 = inicializar_args();
+    argsLeliminar1->ctx = args->ctx;
+    argsLeliminar2->ctx = args->ctx;
+    argsLeliminar3->ctx = args->ctx;
     GObject *lEliminar1 = gtk_builder_get_object(builder, "l_eliminar_1");
     g_signal_connect(lEliminar1, "clicked", G_CALLBACK(handle_eliminar_listado), argsLeliminar1);
     GObject *lEliminar2 = gtk_builder_get_object(builder, "l_eliminar_2");
@@ -329,25 +266,17 @@ void renderizar_listado(RendererArgs* args) {
     g_signal_connect(lEliminar3, "clicked", G_CALLBACK(handle_eliminar_listado), argsLeliminar3);
 
     // Volver
-    HandlerArgs* argsLvolver = malloc(sizeof(HandlerArgs));
-    argsLvolver->builder = builder;
-    argsLvolver->trabajos = trabajos;
-    argsLvolver->contadorTrabajosActual = contadorTrabajosActual;
-    argsLvolver->contadorTrabajosTotal = contadorTrabajosTotal;
-
+    Args* argsLvolver = inicializar_args();
+    argsLvolver->ctx = args->ctx;
     GObject *lVolver = gtk_builder_get_object(builder, "l_volver");
-    g_signal_connect(lVolver, "clicked", G_CALLBACK(handle_volver_listado), NULL);
+    g_signal_connect(lVolver, "clicked", G_CALLBACK(handle_volver_listado), argsLvolver);
 
     // liberar rendererargs
     free(args);
 }
 
-void renderizar_detalle_editar(RendererArgs* args) {
-    GtkBuilder* builder = args->builder;
-    Trabajo** trabajos = args->trabajos;
-    GHashTable* tableWidgetsLabel = args->tableWidgetsLabel;
-    int* contadorTrabajosActual = args->contadorTrabajosActual;
-    int* contadorTrabajosTotal = args->contadorTrabajoTotal;
+void renderizar_detalle_editar(Args* args) {
+    GtkBuilder* builder = args->ctx->builder;
     char* widgetPrevia = args->widgetPrevia;
     char* widgetBase = args->widgetBase;
 
@@ -363,32 +292,27 @@ void renderizar_detalle_editar(RendererArgs* args) {
 
     // Conexion de botones (pasar args)
     // Volver
-    HandlerArgs* argVolverDe = malloc(sizeof(HandlerArgs));
-    argVolverDe->builder = builder;
-    argVolverDe->widgetBase = widgetBase;
-    argVolverDe->widgetPrevia = widgetPrevia;
-    argVolverDe->contadorTrabajosActual = contadorTrabajosActual;
-    argVolverDe->contadorTrabajosTotal = contadorTrabajosTotal;
-    argVolverDe->trabajos = trabajos;
-    argVolverDe->tableWidgetsLabel = tableWidgetsLabel;
+    Args* argVolverDe = inicializar_args();
+    argVolverDe->ctx = args->ctx;
+    argVolverDe->widgetBase = g_strdup(widgetBase);
+    argVolverDe->widgetPrevia = g_strdup(widgetPrevia);
     GObject *deVolver = gtk_builder_get_object(builder, "de_volver");
     g_signal_connect(deVolver, "clicked", G_CALLBACK(handle_volver_de), argVolverDe);
     // Confirmar
-    HandlerArgs* argConfirmarDe = malloc(sizeof(HandlerArgs));
+    Args* argConfirmarDe = inicializar_args();
+    argConfirmarDe->ctx = args->ctx;
     GObject *deConfirmar = gtk_builder_get_object(builder, "de_confirmar");
     g_signal_connect(deConfirmar, "clicked", G_CALLBACK(handle_confirmar_de), argConfirmarDe);
 
     // liberar Rendererargs
     free(args);
+    free(widgetBase);
+    free(widgetPrevia);
 
 }
 
-void renderizar_trabajo(RendererArgs* args) {
-    GtkBuilder* builder = args->builder;
-    GHashTable* tableWidgetsLabel = args->tableWidgetsLabel;
-    Trabajo** trabajos = args->trabajos;
-    int* contadorTrabajosActual = args->contadorTrabajosActual;
-    int* contadorTrabajosTotal = args->contadorTrabajoTotal;
+void renderizar_trabajo(Args* args) {
+    GtkBuilder* builder = args->ctx->builder;
     char* widgetBase = args->widgetBase;
     // Cargar la interfaz "trabajo.glade"
     gtk_builder_add_from_file(builder, "../interfaces/Trabajo.glade", NULL);
@@ -400,33 +324,25 @@ void renderizar_trabajo(RendererArgs* args) {
 
     // Conexion de botones (COMPLETAR)
     // Editar
-    HandlerArgs* argsEditarTrabajo = malloc(sizeof(HandlerArgs));
-    argsEditarTrabajo->builder = builder;
-    argsEditarTrabajo->widgetBase = widgetBase;
-    argsEditarTrabajo->contadorTrabajosActual = contadorTrabajosActual;
-    argsEditarTrabajo->contadorTrabajosTotal = contadorTrabajosTotal;
-    argsEditarTrabajo->trabajos = trabajos;
-    argsEditarTrabajo->tableWidgetsLabel = tableWidgetsLabel;
+    Args* argsEditarTrabajo = inicializar_args();
+    argsEditarTrabajo->ctx = args->ctx;
+    argsEditarTrabajo->widgetBase = g_strdup(widgetBase);
     GObject *tEditar = gtk_builder_get_object(builder, "t_editar");
     g_signal_connect(tEditar, "clicked", G_CALLBACK(handle_editar_trabajo), argsEditarTrabajo);
     // Volver
-    HandlerArgs* argsVolverTrabajo = malloc(sizeof(HandlerArgs));
-    argsVolverTrabajo->builder = builder;
-    argsVolverTrabajo->widgetBase = widgetBase;
-    args->contadorTrabajosActual = contadorTrabajosActual;
-    args->contadorTrabajoTotal = contadorTrabajosTotal;
-    args->trabajos = trabajos;
-    args->tableWidgetsLabel = tableWidgetsLabel;
+    Args* argsVolverTrabajo = inicializar_args();
+    argsVolverTrabajo->ctx = args->ctx;
+    argsVolverTrabajo->widgetBase = g_strdup(widgetBase);
     GObject *tVolver = gtk_builder_get_object(builder, "t_volver");
     g_signal_connect(tVolver, "clicked", G_CALLBACK(handle_volver_trabajo), argsVolverTrabajo);
+
+    // lib
+    free(args);
+    free(widgetBase);
 }
 
-void renderizar_trabajo_editar (RendererArgs* args) {
-    GtkBuilder* builder = args->builder;
-    GHashTable* tableWidgetsLabel = args->tableWidgetsLabel;
-    Trabajo** trabajos = args->trabajos;
-    int* contadorTrabajosActual = args->contadorTrabajosActual;
-    int* contadorTrabajosTotal = args->contadorTrabajoTotal;
+void renderizar_trabajo_editar (Args* args) {
+    GtkBuilder* builder = args->ctx->builder;
     char* widgetBase = args->widgetBase;
     char* accion = args->accion;
     char* trabajoId = args->trabajoId;
@@ -441,44 +357,33 @@ void renderizar_trabajo_editar (RendererArgs* args) {
 
     // Conexion de botones (COMPLETAR)
     // confirmar
-    HandlerArgs* argsConfirmarTe = malloc(sizeof(HandlerArgs));
-    argsConfirmarTe->builder = builder;
-    argsConfirmarTe->widgetBase = widgetBase;
-    argsConfirmarTe->accion = accion;
-    argsConfirmarTe->trabajos = trabajos;
-    argsConfirmarTe->contadorTrabajosActual = contadorTrabajosActual;
-    argsConfirmarTe->contadorTrabajosTotal = contadorTrabajosTotal;
-    argsConfirmarTe->tableWidgetsLabel = tableWidgetsLabel;
+    Args* argsConfirmarTe = inicializar_args();
+    argsConfirmarTe->ctx = args->ctx;
+    argsConfirmarTe->widgetBase = g_strdup(widgetBase);
+    argsConfirmarTe->accion = g_strdup(accion);
     GObject *teConfirmar = gtk_builder_get_object(builder, "te_confirmar");
     g_signal_connect(teConfirmar, "clicked", G_CALLBACK(handle_confirmar_te), argsConfirmarTe);
     // volver
-    HandlerArgs* argsVolverTe = malloc(sizeof(HandlerArgs));
-    argsVolverTe->builder = builder;
-    argsVolverTe->widgetBase = widgetBase;
-    argsVolverTe->accion = accion;
-    argsVolverTe->contadorTrabajosActual = contadorTrabajosActual;
-    argsVolverTe->contadorTrabajosTotal = contadorTrabajosTotal;
-    argsVolverTe->trabajos = trabajos;
-    argsVolverTe->tableWidgetsLabel = tableWidgetsLabel;
+    Args* argsVolverTe = inicializar_args();
+    argsVolverTe->ctx = args->ctx;
+    argsVolverTe->widgetBase = g_strdup(widgetBase);
+    argsVolverTe->accion = g_strdup(accion);
     GObject *teVolver = gtk_builder_get_object(builder, "te_volver");
     g_signal_connect(teVolver, "clicked", G_CALLBACK(handle_volver_te), argsVolverTe);
 
     // liberamos rendererargs
     free(args);
+    free(widgetBase);
+    free(accion);
+    if (trabajoId) free(trabajoId);
 }
 
 void handle_volver_listado(GtkButton* button, gpointer data){
-    HandlerArgs* args = (HandlerArgs*)data;
-    GtkBuilder* builder = args->builder;
-    int *contadorTrabajosActual = args->contadorTrabajosActual;
-    int *contadorTrabajosTotal = args->contadorTrabajosTotal;
-    Trabajo **trabajos = args->trabajos;
+    Args* args = (Args*)data;
+    GtkBuilder* builder = args->ctx->builder;
 
-    RendererArgs* rendererArgs = malloc(sizeof(RendererArgs));
-    rendererArgs->trabajos = trabajos;
-    rendererArgs->builder = builder;
-    rendererArgs->contadorTrabajosActual = contadorTrabajosActual;
-    rendererArgs->contadorTrabajoTotal = contadorTrabajosTotal;
+    Args* rendererArgs = inicializar_args();
+    rendererArgs->ctx = args->ctx;
     renderizar_principal(rendererArgs);
     // Ocultar o destruir la interfaz anterior
     GObject *ventanaActual = gtk_builder_get_object(builder, "listado");
@@ -488,28 +393,17 @@ void handle_volver_listado(GtkButton* button, gpointer data){
 }
 
 void handle_volver_detalle(GtkButton* button, gpointer data){
-    HandlerArgs* args = (HandlerArgs*)data;
-    GtkBuilder* builder = args->builder;
-    GHashTable* tableWidgetsLabel = args->tableWidgetsLabel;
-    int *contadorTrabajosActual = args->contadorTrabajosActual;
-    int *contadorTrabajosTotal = args->contadorTrabajosTotal;
-    Trabajo **trabajos = args->trabajos;
+    Args* args = (Args*)data;
+    GtkBuilder* builder = args->ctx->builder;
     char* widgetBase = args->widgetBase;
     if (strcmp(widgetBase, "principal") == 0) {
-        RendererArgs* rendererArgs = malloc(sizeof(RendererArgs));
-        rendererArgs->trabajos = trabajos;
-        rendererArgs->builder = builder;
-        rendererArgs->contadorTrabajosActual = contadorTrabajosActual;
-        rendererArgs->contadorTrabajoTotal = contadorTrabajosTotal;
+        Args* rendererArgs = inicializar_args();
+        rendererArgs->ctx = args->ctx;
         renderizar_principal(rendererArgs);
     }
     else {
-        RendererArgs* rendererArgs = malloc(sizeof(RendererArgs));
-        rendererArgs->builder = builder;
-        rendererArgs->trabajos = trabajos;
-        rendererArgs->contadorTrabajosActual = contadorTrabajosActual;
-        rendererArgs->contadorTrabajoTotal = contadorTrabajosTotal;
-        rendererArgs->tableWidgetsLabel = tableWidgetsLabel;
+        Args* rendererArgs = inicializar_args();
+        rendererArgs->ctx = args->ctx;
         renderizar_listado(rendererArgs);
     }
     // Ocultar o destruir la interfaz anterior
@@ -521,31 +415,19 @@ void handle_volver_detalle(GtkButton* button, gpointer data){
 }
 
 void handle_volver_de(GtkButton* button, gpointer data){
-    HandlerArgs* args = (HandlerArgs*)data;
-    GtkBuilder* builder = args->builder;
-    GHashTable* tableWidgetsLabel = args->tableWidgetsLabel;
+    Args* args = (Args*)data;
+    GtkBuilder* builder = args->ctx->builder;
     char* widgetPrevia = args->widgetPrevia;
     char* widgetBase = args->widgetBase;
-    int* contadorTrabajosActual = args->contadorTrabajosActual;
-    int* contadorTrabajosTotal = args->contadorTrabajosTotal;
-    Trabajo** trabajos = args->trabajos;
 
     if (strcmp(widgetPrevia, "detalle") == 0) {
-        RendererArgs* rendererArgs = malloc(sizeof(RendererArgs));
-        rendererArgs->widgetBase = widgetBase;
-        rendererArgs->builder = builder;
-        rendererArgs->contadorTrabajosActual = contadorTrabajosActual;
-        rendererArgs->contadorTrabajoTotal = contadorTrabajosTotal;
-        rendererArgs->trabajos = trabajos;
-        rendererArgs->tableWidgetsLabel = tableWidgetsLabel;
+        Args* rendererArgs = inicializar_args();
+        rendererArgs->ctx = args->ctx;
+        rendererArgs->widgetBase = g_strdup(widgetBase);
         renderizar_detalle(rendererArgs);
     } else {
-        RendererArgs* rendererArgs = malloc(sizeof(RendererArgs));
-        rendererArgs->builder = builder;
-        rendererArgs->trabajos = trabajos;
-        rendererArgs->contadorTrabajosActual = contadorTrabajosActual;
-        rendererArgs->contadorTrabajoTotal = contadorTrabajosTotal;
-        rendererArgs->tableWidgetsLabel = tableWidgetsLabel;
+        Args* rendererArgs = inicializar_args();
+        rendererArgs->ctx = args->ctx;
         renderizar_listado(rendererArgs);
     }
     // Ocultar o destruir la interfaz anterior
@@ -554,50 +436,36 @@ void handle_volver_de(GtkButton* button, gpointer data){
     // liberar handler args
     free(args);
     free(widgetPrevia);
+    free(widgetBase);
 }
 
 void handle_volver_trabajo(GtkButton* button, gpointer data) {
-    HandlerArgs* args = (HandlerArgs*)data;
-    GtkBuilder* builder = args->builder;
-    GHashTable* tableWidgetsLabel = args->tableWidgetsLabel;
+    Args* args = (Args*)data;
+    GtkBuilder* builder = args->ctx->builder;
     char* widgetBase = args->widgetBase;
-    int* contadorTrabajosActual = args->contadorTrabajosActual;
-    int* contadorTrabajosTotal = args->contadorTrabajosTotal;
-    Trabajo** trabajos = args->trabajos;
     // renderizamos detalle
-    RendererArgs* rendererArgs = malloc(sizeof(RendererArgs));
-    rendererArgs->widgetBase = widgetBase;
-    rendererArgs->builder = builder;
-    rendererArgs->contadorTrabajosActual = contadorTrabajosActual;
-    rendererArgs->contadorTrabajoTotal = contadorTrabajosTotal;
-    rendererArgs->trabajos = trabajos;
-    rendererArgs->tableWidgetsLabel = tableWidgetsLabel;
+    Args* rendererArgs = inicializar_args();
+    rendererArgs->ctx = args->ctx;
+    rendererArgs->widgetBase = g_strdup(widgetBase);
     renderizar_detalle(rendererArgs);
     // Ocultar o destruir la interfaz anterior
     GObject *ventanaActual = gtk_builder_get_object(builder, "trabajo");
     gtk_widget_hide(GTK_WIDGET(ventanaActual));
     // liberar handler args
     free(args);
+    free(widgetBase);
 }
 
 void handle_volver_te(GtkButton* button, gpointer data) {
-    HandlerArgs* args = (HandlerArgs*)data;
-    GtkBuilder* builder = args->builder;
-    GHashTable* tableWidgetsLabel = args->tableWidgetsLabel;
-    int *contadorTrabajosActual = args->contadorTrabajosActual;
-    int *contadorTrabajosTotal = args->contadorTrabajosTotal;
-    Trabajo **trabajos = args->trabajos;
-    gchar* widgetBase = args->widgetBase;
-    gchar* accion = args->accion;
+    Args* args = (Args*)data;
+    GtkBuilder* builder = args->ctx->builder;
+    char* widgetBase = args->widgetBase;
+    char* accion = args->accion;
     // si viene de editar renderizamos la ventana anterior sino solo la cerramos.
     if (strcmp(accion, "editarDb") == 0) {
-        RendererArgs* rendererArgs = malloc(sizeof(RendererArgs));
-        rendererArgs->builder = builder;
-        rendererArgs->tableWidgetsLabel = tableWidgetsLabel;
-        rendererArgs->contadorTrabajosActual = contadorTrabajosActual;
-        rendererArgs->contadorTrabajoTotal = contadorTrabajosTotal;
-        rendererArgs->trabajos = trabajos;
-        rendererArgs->widgetBase = widgetBase;
+        Args* rendererArgs = inicializar_args();
+        rendererArgs->ctx = args->ctx;
+        rendererArgs->widgetBase = g_strdup(widgetBase);
         renderizar_trabajo(rendererArgs);
     }
     // Ocultar o destruir la interfaz actual
@@ -606,25 +474,18 @@ void handle_volver_te(GtkButton* button, gpointer data) {
     // liberamos handlerargs
     free(args);
     free(accion);
+    free(widgetBase);
 }
 
 void handle_ver_listado(GtkButton* button, gpointer data) {
-    HandlerArgs* args = (HandlerArgs*)data;
-    GtkBuilder* builder = args->builder;
-    GHashTable* tableWidgetsLabel = args->tableWidgetsLabel;
-    int* contadorTrabajosActual = args->contadorTrabajosActual;
-    int* contadorTrabajosTotal = args->contadorTrabajosTotal;
-    Trabajo** trabajos = args->trabajos;
+    Args* args = (Args*)data;
+    GtkBuilder* builder = args->ctx->builder;
     // renderizar el detalle del auto correspondiente cuando este la db hecha.
     char* widgetBase = malloc(sizeof(char)*10);
     strcpy(widgetBase, "listado");
-    RendererArgs* rendererArgs = malloc(sizeof(RendererArgs));
+    Args* rendererArgs = inicializar_args();
+    rendererArgs->ctx = args->ctx;
     rendererArgs->widgetBase = widgetBase;
-    rendererArgs->builder = builder;
-    rendererArgs->contadorTrabajosActual = contadorTrabajosActual;
-    rendererArgs->contadorTrabajoTotal = contadorTrabajosTotal;
-    rendererArgs->trabajos = trabajos;
-    rendererArgs->tableWidgetsLabel = tableWidgetsLabel;
     renderizar_detalle(rendererArgs);
     // Ocultar o destruir la interfaz anterior
     GObject *ventanaActual = gtk_builder_get_object(builder, "listado");
@@ -634,20 +495,12 @@ void handle_ver_listado(GtkButton* button, gpointer data) {
 }
 
 void handle_ver_principal(GtkButton* button, gpointer data) {
-    HandlerArgs* args = (HandlerArgs*)data;
-    GtkBuilder* builder = args->builder;
-    GHashTable* tableWidgetsLabel = args->tableWidgetsLabel;
-    int* contadorTrabajosActual = args->contadorTrabajosActual;
-    int* contadorTrabajosTotal = args->contadorTrabajosTotal;
-    Trabajo** trabajos = args->trabajos;
+    Args* args = (Args*)data;
+    GtkBuilder* builder = args->ctx->builder;
 
     // renderizamos listado
-    RendererArgs* rendererArgs = malloc(sizeof(RendererArgs));
-    rendererArgs->builder = builder;
-    rendererArgs->trabajos = trabajos;
-    rendererArgs->contadorTrabajosActual = contadorTrabajosActual;
-    rendererArgs->contadorTrabajoTotal = contadorTrabajosTotal;
-    rendererArgs->tableWidgetsLabel = tableWidgetsLabel;
+    Args* rendererArgs = inicializar_args();
+    rendererArgs->ctx = args->ctx;
     renderizar_listado(rendererArgs);
     // Ocultar o destruir la interfaz anterior.
     GObject *ventanaActual = gtk_builder_get_object(builder, "principal");
@@ -657,28 +510,20 @@ void handle_ver_principal(GtkButton* button, gpointer data) {
 }
 
 void handle_buscar_principal(GtkButton* button, gpointer data) {
-    HandlerArgs* args = (HandlerArgs*)data;
-    GtkBuilder* builder = args->builder;
-    GHashTable* tableWidgetsLabel = args->tableWidgetsLabel;
-    Trabajo** trabajos = args->trabajos;
-    int* contadorTrabajosActual = args->contadorTrabajosActual;
-    int* contadorTrabajosTotal = args->contadorTrabajosTotal;
+    Args* args = (Args*)data;
+    GtkBuilder* builder = args->ctx->builder;
     // Obtener el GtkEntry
     GObject *entry = gtk_builder_get_object(builder, "p_patente_buscar");
     // Obtener el texto del GtkEntry
     const gchar *entryText = gtk_entry_get_text(GTK_ENTRY(entry));
-    // Imprimir el texto (puedes hacer lo que necesites aquí)
+    // Realizar busqueda de la patente en la DB ???
     g_print("Texto del GtkEntry: %s\n", entryText);
     // renderizar el detalle del auto correspondiente cuando este la db hecha.
     char* widgetBase = malloc(sizeof(char)*25);
     strcpy(widgetBase, "principal");
-    RendererArgs* rendererArgs = malloc(sizeof(RendererArgs));
+    Args* rendererArgs = inicializar_args();
     rendererArgs->widgetBase = widgetBase;
-    rendererArgs->builder = builder;
-    rendererArgs->contadorTrabajosActual = contadorTrabajosActual;
-    rendererArgs->contadorTrabajoTotal = contadorTrabajosTotal;
-    rendererArgs->trabajos = trabajos;
-    rendererArgs->tableWidgetsLabel = tableWidgetsLabel;
+    rendererArgs->ctx = args->ctx;
     renderizar_detalle(rendererArgs);
     // Ocultar o destruir la interfaz anterior
     GObject *ventanaActual = gtk_builder_get_object(builder, "principal");
@@ -688,11 +533,11 @@ void handle_buscar_principal(GtkButton* button, gpointer data) {
 }
 
 void handle_agregar_principal(GtkButton* button, gpointer data) {
-    HandlerArgs* args = (HandlerArgs*)data;
-    GtkBuilder* builder = args->builder;
-    Trabajo** trabajos = args->trabajos;
-    int* contadorTrabajosActual = args->contadorTrabajosActual;
-    int* contadorTrabajosTotal = args->contadorTrabajosTotal;
+    Args* args = (Args*)data;
+    GtkBuilder* builder = args->ctx->builder;
+    Trabajo** trabajos = args->ctx->trabajos;
+    int* contadorTrabajosActual = args->ctx->contadorTrabajosActual;
+    int* contadorTrabajosTotal = args->ctx->contadorTrabajosTotal;
 
     // Obtener los GtkEntry
     GObject *entryPatente = gtk_builder_get_object(builder, "p_patente_agregar");
@@ -703,13 +548,14 @@ void handle_agregar_principal(GtkButton* button, gpointer data) {
     const gchar *entryDuenoText = gtk_entry_get_text(GTK_ENTRY(entryDueno));
     const gchar *entryModeloText = gtk_entry_get_text(GTK_ENTRY(entryModelo));
     // Subirlos a la bd
+    printf("Datos obtenidos: %s - %s - %s\n", entryDuenoText, entryModeloText, entryPatenteText);
     // ???
     // Vaciar la lista de trabajos
     if (*contadorTrabajosActual > 0) {
         // volver a renderizar principal.glade
-        GObject* box_trabajos = gtk_builder_get_object(builder, "box_trabajos");//box_trabajos es el id/name de una box en principal.glade
+        GObject* boxTrabajos = gtk_builder_get_object(builder, "box_trabajos");//box_trabajos es el id/name de una box en principal.glade
         // Obtener los hijos de la GtkBox
-        GList *children = gtk_container_get_children(GTK_CONTAINER(box_trabajos));
+        GList *children = gtk_container_get_children(GTK_CONTAINER(boxTrabajos));
         // Comprobar si hay más de un hijo (el primero es el título)
         if (g_list_length(children) > 1) {
             // Iterar sobre los hijos, pero omitir el primero (índice 0)
@@ -725,80 +571,58 @@ void handle_agregar_principal(GtkButton* button, gpointer data) {
         *contadorTrabajosActual = 0;
         *contadorTrabajosTotal = 0;
     }
-    // liberar handlerargs
     free(args);
 }
 
 void handle_agregar_trabajo_principal(GtkButton* button, gpointer data) {
-    HandlerArgs* args = (HandlerArgs*)data;
-    GtkBuilder* builder = args->builder;
-    GHashTable* tableWidgetsLabel = args->tableWidgetsLabel;
-    int* contadorTrabajosActual = args->contadorTrabajosActual;
-    int* contadorTrabajosTotal = args->contadorTrabajosTotal;
-    Trabajo** trabajos = args->trabajos;
+    Args* args = (Args*)data;
+    
     char* widgetBase = malloc(sizeof(char)*15);
     strcpy(widgetBase, "principal");
-    gchar *accion = malloc(sizeof(char)*15);
+    char *accion = malloc(sizeof(char)*15);
     strcpy(accion, "agregar");
-    RendererArgs* rendererArgs = malloc(sizeof(RendererArgs));
-    rendererArgs->builder = builder;
+    Args* rendererArgs = inicializar_args();
+    rendererArgs->ctx = args->ctx;
     rendererArgs->widgetBase = widgetBase;
     rendererArgs->accion = accion;
     rendererArgs->trabajoId = NULL;
-    rendererArgs->contadorTrabajosActual = contadorTrabajosActual;
-    rendererArgs->contadorTrabajoTotal = contadorTrabajosTotal;
-    rendererArgs->trabajos = trabajos;
-    rendererArgs->tableWidgetsLabel = tableWidgetsLabel;
     renderizar_trabajo_editar(rendererArgs);
+    // free(args);
 }
 
 void handle_editar_detalle(GtkButton* button, gpointer data) {
-    HandlerArgs* args = (HandlerArgs*)data;
-    GtkBuilder* builder = args->builder;
-    GHashTable* tableWidgetsLabel = args->tableWidgetsLabel;
-    int *contadorTrabajosActual = args->contadorTrabajosActual;
-    int *contadorTrabajosTotal = args->contadorTrabajosTotal;
-    Trabajo **trabajos = args->trabajos;
+    Args* args = (Args*)data;
+    GtkBuilder* builder = args->ctx->builder;
     char* widgetBase = args->widgetBase;
     // renderizamos detalleeditar.glade
     char* widgetPrevia = malloc(sizeof(char)*10);
     strcpy(widgetPrevia, "detalle");
-    RendererArgs* rendererArgs = malloc(sizeof(RendererArgs));
-    rendererArgs->builder = builder;
-    rendererArgs->contadorTrabajosActual = contadorTrabajosActual;
-    rendererArgs->contadorTrabajoTotal = contadorTrabajosTotal;
-    rendererArgs->trabajos = trabajos;
+
+    Args* rendererArgs = inicializar_args();
+    rendererArgs->ctx = args->ctx;
     rendererArgs->widgetPrevia = widgetPrevia;
-    rendererArgs->widgetBase = widgetBase;
-    rendererArgs->tableWidgetsLabel = tableWidgetsLabel;
+    rendererArgs->widgetBase = g_strdup(widgetBase);
     renderizar_detalle_editar(rendererArgs);
     // Ocultar o destruir la interfaz anterior
     GObject *ventanaActual = gtk_builder_get_object(builder, "detalle");
     gtk_widget_hide(GTK_WIDGET(ventanaActual)); 
     // liberar handlerargs
     free(args);
+    free(widgetBase);
 }
 
 void handle_editar_listado(GtkButton* button, gpointer data) {
-    HandlerArgs* args = (HandlerArgs*)data;
-    GtkBuilder* builder = args->builder;
-    GHashTable* tableWidgetsLabel = args->tableWidgetsLabel;
-    int *contadorTrabajosActual = args->contadorTrabajosActual;
-    int *contadorTrabajosTotal = args->contadorTrabajosTotal;
-    Trabajo **trabajos = args->trabajos;
+    Args* args = (Args*)data;
+    GtkBuilder* builder = args->ctx->builder;
     // renderizamos detalleeditar.glade
     char* widgetPrevia = malloc(sizeof(char)*10);
     strcpy(widgetPrevia, "detalle");
     char* widgetBase = malloc(sizeof(char)*10);
     strcpy(widgetBase, "listado");
-    RendererArgs* rendererArgs = malloc(sizeof(RendererArgs));
-    rendererArgs->builder = builder;
-    rendererArgs->contadorTrabajosActual = contadorTrabajosActual;
-    rendererArgs->contadorTrabajoTotal = contadorTrabajosTotal;
-    rendererArgs->trabajos = trabajos;
+    Args* rendererArgs = inicializar_args();
+    rendererArgs->ctx = args->ctx;
     rendererArgs->widgetPrevia = widgetPrevia;
     rendererArgs->widgetBase = widgetBase;
-    rendererArgs->tableWidgetsLabel = tableWidgetsLabel;
     renderizar_detalle_editar(rendererArgs);
     // Ocultar o destruir la interfaz anterior
     GObject *ventanaActual = gtk_builder_get_object(builder, "listado");
@@ -808,81 +632,69 @@ void handle_editar_listado(GtkButton* button, gpointer data) {
 }
 
 void handle_editar_trabajo(GtkButton* button, gpointer data) {
-    HandlerArgs* args = (HandlerArgs*)data;
-    GtkBuilder* builder = args->builder;
-    GHashTable* tableWidgetsLabel = args->tableWidgetsLabel;
-    int* contadorTrabajosActual = args->contadorTrabajosActual;
-    int* contadorTrabajosTotal = args->contadorTrabajosTotal;
-    Trabajo** trabajos = args->trabajos;
+    Args* args = (Args*)data;
+    GtkBuilder* builder = args->ctx->builder;
     char* widgetBase = args->widgetBase;
-    gchar *accion = malloc(sizeof(char)*15);
+
+    char *accion = malloc(sizeof(char)*15);
     strcpy(accion, "editarDb");
     // obtener trabajoId como argumento y pasarselo a renderizar_te.
-    RendererArgs* rendererArgs = malloc(sizeof(RendererArgs));
-    rendererArgs->builder = builder;
-    rendererArgs->widgetBase = widgetBase;
+    Args* rendererArgs = inicializar_args();
+    rendererArgs->ctx = args->ctx;
+    rendererArgs->widgetBase = g_strdup(widgetBase);
     rendererArgs->accion = accion;
     rendererArgs->trabajoId = NULL;
-    rendererArgs->contadorTrabajosActual = contadorTrabajosActual;
-    rendererArgs->contadorTrabajoTotal = contadorTrabajosTotal;
-    rendererArgs->trabajos = trabajos;
-    rendererArgs->tableWidgetsLabel = tableWidgetsLabel;
     renderizar_trabajo_editar(rendererArgs);
     // Ocultar o destruir la interfaz anterior
     GObject *ventanaActual = gtk_builder_get_object(builder, "trabajo");
     gtk_widget_hide(GTK_WIDGET(ventanaActual)); 
     // liberar handler args
     free(args);
+    free(widgetBase);
+
 }
 
 void handle_editar_trabajo_principal(GtkButton* button, gpointer data) {
-    HandlerArgs* args = (HandlerArgs*)data;
-    GtkBuilder* builder = args->builder;
-    GHashTable* tableWidgetsLabel = args->tableWidgetsLabel;
-    int* contadorTrabajosActual = args->contadorTrabajosActual;
-    int* contadorTrabajosTotal = args->contadorTrabajosTotal;
-    Trabajo** trabajos = args->trabajos;
+    Args* args = (Args*)data;
+    GtkBuilder* builder = args->ctx->builder;
     char* widgetBase = args->widgetBase;
-    gchar *accion = malloc(sizeof(char)*15);
+
+    char *accion = malloc(sizeof(char)*15);
     strcpy(accion, "editarEstado");
     char* editarTrabajoId = (char*)gtk_widget_get_name((GtkWidget*)button);
     int id = obtener_id_numerico(editarTrabajoId);
-    gchar *trabajoId = malloc(sizeof(char)*25);
+    char *trabajoId = malloc(sizeof(char)*25);
     snprintf(trabajoId, 24, "trabajo_%d", id);
 
-    RendererArgs* rendererArgs = malloc(sizeof(RendererArgs));
-    rendererArgs->builder = builder;
-    rendererArgs->widgetBase = widgetBase;
+    Args* rendererArgs = inicializar_args();
+    rendererArgs->ctx = args->ctx;
+    rendererArgs->widgetBase = g_strdup(widgetBase);
     rendererArgs->accion = accion;
     rendererArgs->trabajoId = trabajoId;
-    rendererArgs->contadorTrabajosActual = contadorTrabajosActual;
-    rendererArgs->contadorTrabajoTotal = contadorTrabajosTotal;
-    rendererArgs->trabajos = trabajos;
-    rendererArgs->tableWidgetsLabel = tableWidgetsLabel;
     renderizar_trabajo_editar(rendererArgs);
-    // liberar handler args
+
     free(args);
-    // ?? quien libera trabajoId
+    free(widgetBase);
 }
 
 void handle_eliminar_trabajo(GtkButton* button, gpointer data) {
-    HandlerArgs* args = (HandlerArgs*)data;
-    GtkBuilder* builder = args->builder;
-    GHashTable *tableWidgetsLabel = args->tableWidgetsLabel;
-    Trabajo** trabajos = args->trabajos;
-    int* contadorTrabajosActual = args->contadorTrabajosActual;
+    Args* args = (Args*)data;
+    GtkBuilder* builder = args->ctx->builder;
+    GHashTable *tableWidgetsLabel = args->ctx->tableWidgetsLabel;
+    Trabajo** trabajos = args->ctx->trabajos;
+    int* contadorTrabajosActual = args->ctx->contadorTrabajosActual;
     // Obtenemos el id del trabajo a eliminar
     char* buttonEliminarId = (char*)gtk_widget_get_name((GtkWidget*)button);
     int id = obtener_id_numerico(buttonEliminarId);
-    gchar *trabajoId = malloc(sizeof(char)*25);
+    char *trabajoId = malloc(sizeof(char)*25);
     snprintf(trabajoId, 24, "trabajo_%d", id);
 
     // Eliminamos el trabajo de los renderizados hasta el momento
     if (*contadorTrabajosActual > 0) {
         // volver a renderizar principal.glade
-        GObject* box_trabajos = gtk_builder_get_object(builder, "box_trabajos");//box_trabajos es el id/name de una box en principal.glade
+        GObject* boxTrabajos = gtk_builder_get_object(builder, "box_trabajos");//box_trabajos es el id/name de una box en principal.glade
         // Obtener los hijos de la GtkBox
-        GList *children = gtk_container_get_children(GTK_CONTAINER(box_trabajos));
+        GList *children = gtk_container_get_children(GTK_CONTAINER(boxTrabajos));
         // Comprobar si hay más de un hijo (el primero es el título)
         if (g_list_length(children) > 1) {
             // Iterar sobre los hijos, para encontrar el que queremos eliminar
@@ -905,61 +717,50 @@ void handle_eliminar_trabajo(GtkButton* button, gpointer data) {
     eliminar_trabajo(trabajos, trabajoId, contadorTrabajosActual);
     // liberar handler args
     free(args);
-    free(trabajoId); // tal vez se requiera liberar en eliminar_trabajo
+    free(trabajoId);
 }
 
 void handle_combobox_detalle(GtkComboBox *combobox, gpointer data) {
-    HandlerArgs* args = (HandlerArgs*)data;
-    GtkBuilder* builder = args->builder;
-    GHashTable* tableWidgetsLabel = args->tableWidgetsLabel;
-    Trabajo** trabajos = args->trabajos;
-    int* contadorTrabajosActual = args->contadorTrabajosActual;
-    int* contadorTrabajosTotal = args->contadorTrabajosTotal;
+    Args* args = (Args*)data;
+    GtkBuilder* builder = args->ctx->builder;
     char* widgetBase = args->widgetBase;
 
     GtkTreeIter iter;
     GtkTreeModel *model;
     gchar *id_value;
-
     // Obtener el modelo del ComboBox
     model = gtk_combo_box_get_model(combobox);
-
     // Comprobar si hay una fila seleccionada
     if (gtk_combo_box_get_active_iter(combobox, &iter)) {
         // Obtener el valor de la columna 1 (donde almacenamos los IDs)
         gtk_tree_model_get(model, &iter, 1, &id_value, -1);
-
         // Mostrar el ID seleccionado en la consola
         g_print("ID seleccionado: %s\n", id_value);
-
         // Liberar memoria
         g_free(id_value);
     }
     // renderizamos trabajo.glade
-    RendererArgs* rendererArgs = malloc(sizeof(RendererArgs));
-    rendererArgs->builder = builder;
-    rendererArgs->widgetBase = widgetBase;
-    rendererArgs->contadorTrabajosActual = contadorTrabajosActual;
-    rendererArgs->contadorTrabajoTotal = contadorTrabajosTotal;
-    rendererArgs->trabajos = trabajos;
-    rendererArgs->tableWidgetsLabel = tableWidgetsLabel;
+    Args* rendererArgs = inicializar_args();
+    rendererArgs->ctx = args->ctx;
+    rendererArgs->widgetBase = g_strdup(widgetBase);
     renderizar_trabajo(rendererArgs);
     // Ocultar o destruir la interfaz anterior
     GObject *ventanaActual = gtk_builder_get_object(builder, "detalle");
     gtk_widget_hide(GTK_WIDGET(ventanaActual));
     // liberar handler args
     free(args);
+    free(widgetBase);
 }
 
 void handle_confirmar_te(GtkButton* button, gpointer data) {
-    HandlerArgs* args = (HandlerArgs*)data;
-    GtkBuilder* builder = args->builder;
-    GHashTable *tableWidgetsLabel = args->tableWidgetsLabel;
-    Trabajo** trabajos = args->trabajos;
-    int* contadorTrabajosTotal = args->contadorTrabajosTotal;
-    int* contadorTrabajosActual = args->contadorTrabajosActual;
-    gchar* widgetBase = args->widgetBase;
-    gchar* accion = args->accion;
+    Args* args = (Args*)data;
+    GtkBuilder* builder = args->ctx->builder;
+    GHashTable *tableWidgetsLabel = args->ctx->tableWidgetsLabel;
+    Trabajo** trabajos = args->ctx->trabajos;
+    int* contadorTrabajosTotal = args->ctx->contadorTrabajosTotal;
+    int* contadorTrabajosActual = args->ctx->contadorTrabajosActual;
+    char* widgetBase = args->widgetBase;
+    char* accion = args->accion;
 
     // Obtener los inputs.
     GObject *entryTitulo = gtk_builder_get_object(builder, "te_titulo");
@@ -986,32 +787,25 @@ void handle_confirmar_te(GtkButton* button, gpointer data) {
     trabajo->descripcion = textDetalle;
     trabajo->fecha = fecha;
 
-    // si la widget base es principal.glade agregamos el trabajo en la interfaz
     if (strcmp(accion, "agregar") == 0) {
+        printf("entre con %d trabajos\n", *contadorTrabajosActual);
         char *trabajoId = malloc(sizeof(char)*15);
         snprintf(trabajoId, 15, "trabajo_%d", *contadorTrabajosTotal+1);
         trabajo->id = trabajoId;
         // agregamos el trabajo al estado global
         agregar_trabajo(trabajos, trabajo, contadorTrabajosActual, contadorTrabajosTotal);
         // Mostrar el trabajo agregado en principal.glade
-        RendererArgs* rendererArgs = malloc(sizeof(RendererArgs));
-        rendererArgs->builder = builder;
-        rendererArgs->numeralId = *contadorTrabajosTotal;
-        rendererArgs->tituloTrabajo = trabajo->titulo;
-        rendererArgs->contadorTrabajosActual = contadorTrabajosActual;
-        rendererArgs->trabajos = trabajos;
-        rendererArgs->contadorTrabajoTotal = contadorTrabajosTotal;
-        rendererArgs->tableWidgetsLabel = tableWidgetsLabel;
+        Args* rendererArgs = inicializar_args();
+        rendererArgs->ctx = args->ctx;
+        rendererArgs->trabajoId = g_strdup(trabajoId);
+        rendererArgs->tituloTrabajo = g_strdup(trabajo->titulo);
         renderizar_trabajo_principal(rendererArgs);
+        printf("sali con %d trabajos\n", *(rendererArgs->ctx->contadorTrabajosActual));
     }
     else if (strcmp(accion, "editarDb") == 0){
-        RendererArgs* rendererArgs = malloc(sizeof(RendererArgs));
-        rendererArgs->builder = builder;
-        rendererArgs->widgetBase = widgetBase;
-        rendererArgs->contadorTrabajosActual = contadorTrabajosActual;
-        rendererArgs->contadorTrabajoTotal = contadorTrabajosTotal;
-        rendererArgs->trabajos = trabajos;
-        rendererArgs->tableWidgetsLabel = tableWidgetsLabel;
+        Args* rendererArgs = inicializar_args();
+        rendererArgs->ctx = args->ctx;
+        rendererArgs->widgetBase = g_strdup(widgetBase);
         renderizar_trabajo(rendererArgs);
         // Editar trabajo en db
         free(trabajo->km);
@@ -1023,7 +817,7 @@ void handle_confirmar_te(GtkButton* button, gpointer data) {
     }
     else { // editarEstado
         // Editar los datos al estado
-        gchar* trabajoId = args->trabajoId;
+        char* trabajoId = args->trabajoId;
         trabajo->id = trabajoId;
         editar_trabajo(trabajos, trabajo, trabajoId, contadorTrabajosActual);
         // editar el titulo en la widget label
@@ -1041,16 +835,17 @@ void handle_confirmar_te(GtkButton* button, gpointer data) {
     // liberar handlerArgs
     free(args);
     free(accion);
+    free(widgetBase);
 }
 
 void handle_confirmar_de(GtkButton* button, gpointer data) {
-    HandlerArgs* args = (HandlerArgs*)data;
+    Args* args = (Args*)data;
     printf("accedi desde confirmar en detalleditar.glade\n");
     free(args);
 }
 
 void handle_eliminar_listado(GtkButton* button, gpointer data) {
-    HandlerArgs* args = (HandlerArgs*)data;
-    printf("accedi desde eliminar de listado.glade");
+    Args* args = (Args*)data;
+    printf("accedi desde eliminar de listado.glade\n");
     free(args);
 }
