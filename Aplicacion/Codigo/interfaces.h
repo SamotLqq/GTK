@@ -25,23 +25,41 @@ typedef struct
     char* accion;
 } Args;
 
-// Devuelve una nueva instancia de args con los argumentos inicializados en NULL.
+typedef struct 
+{
+    Args** arr;
+    int cant;
+} ArgsArray;
+
+
+// Devuelve una nueva instancia de Args con los argumentos inicializados en NULL.
 Args* inicializar_args();
+// Devuelve una instancia de ArgsArray con lugar para 5 arr y contador en 0.
+ArgsArray* inicializar_args_arr();
+// Agrega un elemento al arreglo de argumentos al final
+void agregar_args_arr(ArgsArray* arr, Args* args);
+// Agrega un elemento al arreglo de argumento al principio
+void agg_arr_inicio(ArgsArray* arr, Args* args);
+
+
+
+// recibe como argumento un puntero a una estructura de tipo ArgsArray
+void destruccion_widget(ArgsArray* arr);
 
 // renderiza principal.glade con funcionalidades
-void renderizar_principal(Args* args);
+void renderizar_principal(ArgsArray* arr);
 // renderiza un trabajo en principal.glade
-void renderizar_trabajo_principal(Args* args);
+void renderizar_trabajo_principal(ArgsArray* arr);
 // renderiza detalle.glade con funcionalidades
-void renderizar_detalle(Args* args);
+void renderizar_detalle(ArgsArray* arr);
 // renderiza listado.glade con funcionalidades
-void renderizar_listado(Args* args);
+void renderizar_listado(ArgsArray* arr);
 // renderiza detalleEditar.glade
-void renderizar_detalle_editar(Args* args);
+void renderizar_detalle_editar(ArgsArray* arr);
 // renderiza trabajo.glade
-void renderizar_trabajo (Args* args);
+void renderizar_trabajo (ArgsArray* arr);
 // renderiza trabajoEditar.glade
-void renderizar_trabajo_editar (Args* args);
+void renderizar_trabajo_editar (ArgsArray* arr);
 // manejador del boton volver a principal.glade desde listado.glade
 void handle_volver_listado(GtkButton* button, gpointer data);
 // manejador del boton volver desde detalle.glade

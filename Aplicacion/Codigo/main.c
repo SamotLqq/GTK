@@ -11,11 +11,13 @@ int main(int argc, char *argv[]) {
     // Inicializar trabajos
     Trabajo** trabajos = inicializar_trabajos();
     // Contador global para los trabajos agregados contando eliminados
-    int contadorTrabajosTotal = 0;
+    int* contadorTrabajosTotal = malloc(sizeof(int));
+    *contadorTrabajosTotal = 0;
     // Contador global para los trabajos actuales
-    int contadorTrabajosActual = 0;
+    int* contadorTrabajosActual = malloc(sizeof(int));
+    *contadorTrabajosActual = 0;
     // Inicializamos tabla hash para guardar los widgets de los labels
-    GHashTable *tableWidgetsLabel = g_hash_table_new(g_str_hash, g_str_equal);
+    GHashTable *tableWidgetsLabel = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_object_unref);
 
     // Inicializar GTK
     gtk_init(&argc, &argv);
@@ -29,10 +31,12 @@ int main(int argc, char *argv[]) {
     ctx->tableWidgetsLabel = tableWidgetsLabel;
     ctx->builder = builder;
     ctx->trabajos = trabajos;
-    ctx->contadorTrabajosActual = &contadorTrabajosActual;
-    ctx->contadorTrabajosTotal = &contadorTrabajosTotal;
+    ctx->contadorTrabajosActual = contadorTrabajosActual;
+    ctx->contadorTrabajosTotal = contadorTrabajosTotal;
     args->ctx = ctx;
-    renderizar_principal(args);
+    ArgsArray* arr = inicializar_args_arr();
+    agregar_args_arr(arr, args);
+    renderizar_principal(arr);
 
     // Iniciar el bucle principal de GTK
     gtk_main();
@@ -40,10 +44,15 @@ int main(int argc, char *argv[]) {
     // printf("entre\n"); // verificaca si se ejecuta lo que esta debajo del bucle principal.
     
     // Liberamos memoria
-    // liberar args, ctx y contenido.
+    // liberar ctx y contadores.
+    free(contadorTrabajosActual);
+    free(contadorTrabajosTotal);
+    free(ctx);
     // liberar trabajos
-    // liberar hash
-    // g_object_unref(builder); // libera builder
+    liberar_trabajos(trabajos, contadorTrabajosActual);
+    free(trabajos);
+    g_hash_table_destroy(tableWidgetsLabel); // liberar hash
+    g_object_unref(builder); // libera builder
 
     return 0;
 }

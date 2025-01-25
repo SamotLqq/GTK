@@ -9,6 +9,10 @@
 
 Args* inicializar_args() {
     Args* args = malloc(sizeof(Args));
+    if (args == NULL) {
+        perror("Error al inicializar args\n");
+        exit(EXIT_FAILURE);
+    }
     args->ctx = NULL;
     args->accion = NULL;
     args->tituloTrabajo = NULL;
@@ -18,53 +22,105 @@ Args* inicializar_args() {
     return args;
 }
 
-void renderizar_principal(Args* args) {
+ArgsArray* inicializar_args_arr() {
+    ArgsArray* arr = malloc(sizeof(ArgsArray));
+    if (arr == NULL) {
+        perror("Error al inicializar arr");
+        exit(EXIT_FAILURE);
+    }
+    arr->arr = malloc(sizeof(Args*)*5);
+    if (arr->arr == NULL) {
+        perror("Error al inicializar arrarr");
+        exit(EXIT_FAILURE);
+    }
+    arr->cant = 0;
+    return arr;
+}
+
+void agregar_args_arr(ArgsArray* arr, Args* args) {
+    if (arr->cant < 5) {
+        arr->arr[arr->cant] = args;
+        arr->cant = arr->cant + 1;
+    }
+    else {
+        perror("Error al agregar args\n");
+        exit(EXIT_FAILURE);
+    }
+}
+
+void agg_arr_inicio(ArgsArray* arr, Args* args) {
+    if (arr->cant < 5) {
+        for (int i = arr->cant - 1; i >= 0; i--) {
+            arr->arr[i+1] = arr->arr[i];
+        }
+        arr->arr[0] = args;
+    }
+    else {
+        perror("Error al agregar args\n");
+        exit(EXIT_FAILURE);
+    }
+}
+
+void destruccion_widget(ArgsArray* arr) {
+    for (int i = 0; i < arr->cant; i++)
+    {
+        Args* args = arr->arr[i];
+        if (args->accion) free(args->accion);
+        if (args->tituloTrabajo) free(args->tituloTrabajo);
+        if (args->trabajoId) free(args->trabajoId);
+        if (args->widgetBase) free(args->widgetBase);
+        if (args->widgetPrevia) free(args->widgetPrevia);
+        if (args->ctx) free(args->ctx);
+        if (args) free(args);
+    }
+    free(arr);
+}
+
+void renderizar_principal(ArgsArray* arr) {
+    Args* args = arr->arr[0];
     GtkBuilder* builder = args->ctx->builder;
     Trabajo** trabajos = args->ctx->trabajos;
     int* contadorTrabajosActual = args->ctx->contadorTrabajosActual; 
+    printf("direcciones %p - %p - %p - %p\n", args, builder, trabajos, contadorTrabajosActual);
     // Agregamos la interfaz principal.glade al builder
     gtk_builder_add_from_file(builder, "../interfaces/Principal.glade", NULL);
     // Renderizar los trabajos actuales en el estado
     for (int i = 0; i < *contadorTrabajosActual; i++) {
         Args* rtpArgs = inicializar_args();
         rtpArgs->trabajoId = g_strdup(trabajos[i]->id);
+        printf("trabajo id: %s\n", rtpArgs->trabajoId);
         rtpArgs->tituloTrabajo =  g_strdup(trabajos[i]->titulo);
+        printf("titulo trabajo: %s\n", rtpArgs->tituloTrabajo);
         rtpArgs->ctx = args->ctx;
-        renderizar_trabajo_principal(rtpArgs);
+        agg_arr_inicio(arr, rtpArgs);
+        renderizar_trabajo_principal(arr);
     }
     // Conexion de botones
+    Args* handlerArgs = inicializar_args();
+    handlerArgs->ctx = args->ctx;
+    agg_arr_inicio(arr, handlerArgs);
     // Buscar
-    Args* argsPbuscar = inicializar_args();
-    argsPbuscar->ctx = args->ctx;
     GObject *pBuscar = gtk_builder_get_object(builder, "p_buscar");
-    g_signal_connect(pBuscar, "clicked", G_CALLBACK(handle_buscar_principal), argsPbuscar);
+    g_signal_connect(pBuscar, "clicked", G_CALLBACK(handle_buscar_principal), arr);
     // Ver listado
-    Args* argsPlistado = inicializar_args();
-    argsPlistado->ctx = args->ctx;
     GObject *pListado = gtk_builder_get_object(builder, "p_listado");
-    g_signal_connect(pListado, "clicked", G_CALLBACK(handle_ver_principal), argsPlistado);
+    g_signal_connect(pListado, "clicked", G_CALLBACK(handle_ver_principal), arr);
     // Agregar
-    Args* argsPagregar = inicializar_args();
-    argsPagregar->ctx = args->ctx;
     GObject *pAgregar = gtk_builder_get_object(builder, "p_agregar");
-    g_signal_connect(pAgregar, "clicked", G_CALLBACK(handle_agregar_principal), argsPagregar);
+    g_signal_connect(pAgregar, "clicked", G_CALLBACK(handle_agregar_principal), arr);
     // Agregar Trabajo
-    Args* argsPagregarTrabajo = inicializar_args();
-    argsPagregarTrabajo->ctx = args->ctx;
     GObject *pAgregarTrabajo = gtk_builder_get_object(builder, "p_agregar_trabajo");
-    g_signal_connect(pAgregarTrabajo, "clicked", G_CALLBACK(handle_agregar_trabajo_principal), argsPagregarTrabajo);
-
+    g_signal_connect(pAgregarTrabajo, "clicked", G_CALLBACK(handle_agregar_trabajo_principal), arr);
     // Obtener la ventana principal y conectarla al evento de destrucción
     GObject *window = gtk_builder_get_object(builder, "principal");
     // ??? completar crear una funcion que llame a gtkmainquit dentro y libere los handlerargs
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
     // Mostrar la ventana principal
     gtk_widget_show_all(GTK_WIDGET(window));
-    // liberar rendererargs
-    free(args);
 }
 
-void renderizar_trabajo_principal(Args* args) {
+void renderizar_trabajo_principal(ArgsArray* arr) {
+    Args* args = arr->arr[0];
     GtkBuilder* builder = args->ctx->builder;
     GHashTable *tableWidgetsLabel = args->ctx->tableWidgetsLabel;
     int numeralId = obtener_id_numerico(args->trabajoId);
@@ -105,24 +161,23 @@ void renderizar_trabajo_principal(Args* args) {
     // Agregamos la widget del label a la tabla hash
     g_hash_table_insert(tableWidgetsLabel, g_strdup(labelId), label);
 
+    Args* handlerArgs = inicializar_args();
+    handlerArgs->ctx = args->ctx;
+    handlerArgs->widgetBase = widgetBase;
+    agg_arr_inicio(arr, handlerArgs);
     // Crear el Botón "Editar"
     GtkWidget *buttonEditar = gtk_button_new_with_label("Editar");
     char buttonEditarId[25];
     snprintf(buttonEditarId, 24, "editar_trabajo_%d", numeralId);
     gtk_widget_set_name(buttonEditar, buttonEditarId);
-    Args* argsEditarTp = inicializar_args();
-    argsEditarTp->ctx = args->ctx;
-    argsEditarTp->widgetBase = widgetBase;
-    g_signal_connect(buttonEditar, "clicked", G_CALLBACK(handle_editar_trabajo_principal), argsEditarTp);
+    g_signal_connect(buttonEditar, "clicked", G_CALLBACK(handle_editar_trabajo_principal), arr);
     // Crear el Botón "Eliminar"
     GtkWidget *buttonEliminar = gtk_button_new_with_label("Eliminar");
     gtk_widget_set_margin_end(buttonEliminar, 25); // Agregar un margen de 5 píxeles a la derecha del botón
     char buttonEliminarId[25];
     snprintf(buttonEliminarId, 24, "eliminar_trabajo_%d", numeralId);
     gtk_widget_set_name(buttonEliminar, buttonEliminarId);
-    Args* argsEliminarTp = inicializar_args();
-    argsEliminarTp->ctx = args->ctx;
-    g_signal_connect(buttonEliminar, "clicked", G_CALLBACK(handle_eliminar_trabajo), argsEliminarTp);
+    g_signal_connect(buttonEliminar, "clicked", G_CALLBACK(handle_eliminar_trabajo), arr);
 
 
     // Agregar el Label a la primera columna del Grid
@@ -138,14 +193,10 @@ void renderizar_trabajo_principal(Args* args) {
     
     // Mostrar los widgets recién creados
     gtk_widget_show_all(grid);
-
-    // liberar rendererargs
-    //free(args->trabajoId);
-    //free(args->tituloTrabajo);
-    //free(args);
 }
 
-void renderizar_detalle(Args* args) {
+void renderizar_detalle(ArgsArray* arr) {
+    Args* args = arr->arr[0];
     GtkBuilder* builder = args->ctx->builder;
     char* widgetBase = args->widgetBase;
 
@@ -160,19 +211,16 @@ void renderizar_detalle(Args* args) {
     gtk_widget_show_all(GTK_WIDGET(window));
 
     // Conexion de botones
+    Args* handlerArgs = inicializar_args();
+    handlerArgs->ctx = args->ctx;
+    handlerArgs->widgetBase = g_strdup(widgetBase);
+    agg_arr_inicio(arr, handlerArgs);
     // Volver
-    Args* argsVolverDetalle = inicializar_args();
-    argsVolverDetalle->ctx = args->ctx;
-    argsVolverDetalle->widgetBase = g_strdup(widgetBase);
     GObject *dVolver = gtk_builder_get_object(builder, "d_volver");
-    g_signal_connect(dVolver, "clicked", G_CALLBACK(handle_volver_detalle), argsVolverDetalle);
+    g_signal_connect(dVolver, "clicked", G_CALLBACK(handle_volver_detalle), arr);
     // Editar
-    Args* argsEditarDetalle = inicializar_args();
-    argsEditarDetalle->ctx = args->ctx;
-    argsEditarDetalle->widgetBase = g_strdup(widgetBase);
     GObject *dEditar = gtk_builder_get_object(builder, "d_editar");
-    g_signal_connect(dEditar, "clicked", G_CALLBACK(handle_editar_detalle), argsEditarDetalle);
-
+    g_signal_connect(dEditar, "clicked", G_CALLBACK(handle_editar_detalle), arr);
     // Manejo del combo box
     GObject *dTrabajos = gtk_builder_get_object(builder, "d_trabajos");
     // Crear un modelo ListStore con una columna de tipo texto
@@ -198,18 +246,14 @@ void renderizar_detalle(Args* args) {
     gtk_cell_layout_set_attributes(GTK_CELL_LAYOUT(dTrabajos), renderer, "text", 0, NULL);
     // Agregar el manejador de los botones del combobox
     // Conectar la señal "changed"
-    Args* argsComboBoxDetalle = inicializar_args();
-    argsComboBoxDetalle->ctx = args->ctx;
-    argsComboBoxDetalle->widgetBase = g_strdup(widgetBase);
-    g_signal_connect(dTrabajos, "changed", G_CALLBACK(handle_combobox_detalle), argsComboBoxDetalle);
-
-    // liberamos args
-    free(args);
-    free(widgetBase);
+    g_signal_connect(dTrabajos, "changed", G_CALLBACK(handle_combobox_detalle), arr);
 }
 
-void renderizar_listado(Args* args) {
+void renderizar_listado(ArgsArray* arr) {
+    Args* args = arr->arr[0];
     GtkBuilder* builder = args->ctx->builder;
+    printf("direcciones: %p - %p en renderizar listado\n", args, builder);
+
 
     // Cargar la segunda interfaz desde el archivo "mi_interfaz2.glade"
     gtk_builder_add_from_file(builder, "../interfaces/Listado.glade", NULL);
@@ -222,60 +266,42 @@ void renderizar_listado(Args* args) {
     gtk_widget_show_all(GTK_WIDGET(window));
 
     // Conexion de botones
+    Args* handlerArgs = inicializar_args();
+    handlerArgs->ctx = args->ctx;
+    agg_arr_inicio(arr, handlerArgs);
     // Ver (obtenemos el auto que se encuentra en la fila del boton ver elegido y aplicamos handle_buscar)
-    Args* argsLver1 = inicializar_args();
-    Args* argsLver2 = inicializar_args();
-    Args* argsLver3 = inicializar_args();
-    argsLver1->ctx = args->ctx;
-    argsLver2->ctx = args->ctx;
-    argsLver3->ctx = args->ctx;
     GObject *lVer1 = gtk_builder_get_object(builder, "l_ver_1");
-    g_signal_connect(lVer1, "clicked", G_CALLBACK(handle_ver_listado), argsLver1);
+    g_signal_connect(lVer1, "clicked", G_CALLBACK(handle_ver_listado), arr);
     GObject *lVer2 = gtk_builder_get_object(builder, "l_ver_2");
-    g_signal_connect(lVer2, "clicked", G_CALLBACK(handle_ver_listado), argsLver2);
+    g_signal_connect(lVer2, "clicked", G_CALLBACK(handle_ver_listado), arr);
     GObject *lVer3 = gtk_builder_get_object(builder, "l_ver_3");
-    g_signal_connect(lVer3, "clicked", G_CALLBACK(handle_ver_listado), argsLver3);
+    g_signal_connect(lVer3, "clicked", G_CALLBACK(handle_ver_listado), arr);
     
 
     // Editar (obtenemos el auto que se encuentra en la fila del boton editar elegido y aplicamos handle_editar)
-    Args* argsLeditar1 = inicializar_args();
-    Args* argsLeditar2 = inicializar_args();
-    Args* argsLeditar3 = inicializar_args();
-    argsLeditar1->ctx = args->ctx;
-    argsLeditar2->ctx = args->ctx;
-    argsLeditar3->ctx = args->ctx;
     GObject *lEditar1 = gtk_builder_get_object(builder, "l_editar_1");
-    g_signal_connect(lEditar1, "clicked", G_CALLBACK(handle_editar_listado), argsLeditar1);
+    g_signal_connect(lEditar1, "clicked", G_CALLBACK(handle_editar_listado), arr);
     GObject *lEditar2 = gtk_builder_get_object(builder, "l_editar_2");
-    g_signal_connect(lEditar2, "clicked", G_CALLBACK(handle_editar_listado), argsLeditar2);
+    g_signal_connect(lEditar2, "clicked", G_CALLBACK(handle_editar_listado), arr);
     GObject *lEditar3 = gtk_builder_get_object(builder, "l_editar_3");
-    g_signal_connect(lEditar3, "clicked", G_CALLBACK(handle_editar_listado), argsLeditar3);
+    g_signal_connect(lEditar3, "clicked", G_CALLBACK(handle_editar_listado), arr);
 
     // Eliminar
-    Args* argsLeliminar1 = inicializar_args();
-    Args* argsLeliminar2 = inicializar_args();
-    Args* argsLeliminar3 = inicializar_args();
-    argsLeliminar1->ctx = args->ctx;
-    argsLeliminar2->ctx = args->ctx;
-    argsLeliminar3->ctx = args->ctx;
     GObject *lEliminar1 = gtk_builder_get_object(builder, "l_eliminar_1");
-    g_signal_connect(lEliminar1, "clicked", G_CALLBACK(handle_eliminar_listado), argsLeliminar1);
+    g_signal_connect(lEliminar1, "clicked", G_CALLBACK(handle_eliminar_listado), arr);
     GObject *lEliminar2 = gtk_builder_get_object(builder, "l_eliminar_2");
-    g_signal_connect(lEliminar2, "clicked", G_CALLBACK(handle_eliminar_listado), argsLeliminar2);
+    g_signal_connect(lEliminar2, "clicked", G_CALLBACK(handle_eliminar_listado), arr);
     GObject *lEliminar3 = gtk_builder_get_object(builder, "l_eliminar_3");
-    g_signal_connect(lEliminar3, "clicked", G_CALLBACK(handle_eliminar_listado), argsLeliminar3);
+    g_signal_connect(lEliminar3, "clicked", G_CALLBACK(handle_eliminar_listado), arr);
 
     // Volver
-    Args* argsLvolver = inicializar_args();
-    argsLvolver->ctx = args->ctx;
     GObject *lVolver = gtk_builder_get_object(builder, "l_volver");
-    g_signal_connect(lVolver, "clicked", G_CALLBACK(handle_volver_listado), argsLvolver);
-
-    // liberar rendererargs
-    free(args);
+    g_signal_connect(lVolver, "clicked", G_CALLBACK(handle_volver_listado), arr);
+    printf("sali renderizar listado\n");
 }
 
-void renderizar_detalle_editar(Args* args) {
+void renderizar_detalle_editar(ArgsArray* arr) {
+    Args* args = arr->arr[0];
     GtkBuilder* builder = args->ctx->builder;
     char* widgetPrevia = args->widgetPrevia;
     char* widgetBase = args->widgetBase;
@@ -291,27 +317,21 @@ void renderizar_detalle_editar(Args* args) {
     gtk_widget_show_all(GTK_WIDGET(window));
 
     // Conexion de botones (pasar args)
+    Args* handlerArgs = inicializar_args();
+    handlerArgs->ctx = args->ctx;
+    handlerArgs->widgetBase = g_strdup(widgetBase);
+    handlerArgs->widgetPrevia = g_strdup(widgetPrevia);
+    agg_arr_inicio(arr, handlerArgs);
     // Volver
-    Args* argVolverDe = inicializar_args();
-    argVolverDe->ctx = args->ctx;
-    argVolverDe->widgetBase = g_strdup(widgetBase);
-    argVolverDe->widgetPrevia = g_strdup(widgetPrevia);
     GObject *deVolver = gtk_builder_get_object(builder, "de_volver");
-    g_signal_connect(deVolver, "clicked", G_CALLBACK(handle_volver_de), argVolverDe);
+    g_signal_connect(deVolver, "clicked", G_CALLBACK(handle_volver_de), arr);
     // Confirmar
-    Args* argConfirmarDe = inicializar_args();
-    argConfirmarDe->ctx = args->ctx;
     GObject *deConfirmar = gtk_builder_get_object(builder, "de_confirmar");
-    g_signal_connect(deConfirmar, "clicked", G_CALLBACK(handle_confirmar_de), argConfirmarDe);
-
-    // liberar Rendererargs
-    free(args);
-    free(widgetBase);
-    free(widgetPrevia);
-
+    g_signal_connect(deConfirmar, "clicked", G_CALLBACK(handle_confirmar_de), arr);
 }
 
-void renderizar_trabajo(Args* args) {
+void renderizar_trabajo(ArgsArray* arr) {
+    Args* args = arr->arr[0];
     GtkBuilder* builder = args->ctx->builder;
     char* widgetBase = args->widgetBase;
     // Cargar la interfaz "trabajo.glade"
@@ -323,25 +343,20 @@ void renderizar_trabajo(Args* args) {
     gtk_widget_show_all(GTK_WIDGET(window)); 
 
     // Conexion de botones (COMPLETAR)
+    Args* handlerArgs = inicializar_args();
+    handlerArgs->ctx = args->ctx;
+    handlerArgs->widgetBase = g_strdup(widgetBase);
+    agg_arr_inicio(arr, handlerArgs);
     // Editar
-    Args* argsEditarTrabajo = inicializar_args();
-    argsEditarTrabajo->ctx = args->ctx;
-    argsEditarTrabajo->widgetBase = g_strdup(widgetBase);
     GObject *tEditar = gtk_builder_get_object(builder, "t_editar");
-    g_signal_connect(tEditar, "clicked", G_CALLBACK(handle_editar_trabajo), argsEditarTrabajo);
+    g_signal_connect(tEditar, "clicked", G_CALLBACK(handle_editar_trabajo), arr);
     // Volver
-    Args* argsVolverTrabajo = inicializar_args();
-    argsVolverTrabajo->ctx = args->ctx;
-    argsVolverTrabajo->widgetBase = g_strdup(widgetBase);
     GObject *tVolver = gtk_builder_get_object(builder, "t_volver");
-    g_signal_connect(tVolver, "clicked", G_CALLBACK(handle_volver_trabajo), argsVolverTrabajo);
-
-    // lib
-    free(args);
-    free(widgetBase);
+    g_signal_connect(tVolver, "clicked", G_CALLBACK(handle_volver_trabajo), arr);
 }
 
-void renderizar_trabajo_editar (Args* args) {
+void renderizar_trabajo_editar (ArgsArray* arr) {
+    Args* args = arr->arr[0];
     GtkBuilder* builder = args->ctx->builder;
     char* widgetBase = args->widgetBase;
     char* accion = args->accion;
@@ -356,108 +371,105 @@ void renderizar_trabajo_editar (Args* args) {
     gtk_widget_show_all(GTK_WIDGET(window)); 
 
     // Conexion de botones (COMPLETAR)
+    Args* handlerArgs = inicializar_args();
+    handlerArgs->ctx = args->ctx;
+    handlerArgs->widgetBase = g_strdup(widgetBase);
+    handlerArgs->accion = g_strdup(accion);
+    agg_arr_inicio(arr, handlerArgs);
     // confirmar
-    Args* argsConfirmarTe = inicializar_args();
-    argsConfirmarTe->ctx = args->ctx;
-    argsConfirmarTe->widgetBase = g_strdup(widgetBase);
-    argsConfirmarTe->accion = g_strdup(accion);
     GObject *teConfirmar = gtk_builder_get_object(builder, "te_confirmar");
-    g_signal_connect(teConfirmar, "clicked", G_CALLBACK(handle_confirmar_te), argsConfirmarTe);
+    g_signal_connect(teConfirmar, "clicked", G_CALLBACK(handle_confirmar_te), arr);
     // volver
-    Args* argsVolverTe = inicializar_args();
-    argsVolverTe->ctx = args->ctx;
-    argsVolverTe->widgetBase = g_strdup(widgetBase);
-    argsVolverTe->accion = g_strdup(accion);
     GObject *teVolver = gtk_builder_get_object(builder, "te_volver");
-    g_signal_connect(teVolver, "clicked", G_CALLBACK(handle_volver_te), argsVolverTe);
-
-    // liberamos rendererargs
-    free(args);
-    free(widgetBase);
-    free(accion);
-    if (trabajoId) free(trabajoId);
+    g_signal_connect(teVolver, "clicked", G_CALLBACK(handle_volver_te), arr);
 }
 
 void handle_volver_listado(GtkButton* button, gpointer data){
-    Args* args = (Args*)data;
+    printf("entre handle volver listado\n");
+    ArgsArray* arr = (ArgsArray*)data;
+    Args* args = arr->arr[0];
     GtkBuilder* builder = args->ctx->builder;
+    printf("direccion builder en hvl: %p\n", builder);
 
+    ArgsArray* rendererArr = inicializar_args_arr();
     Args* rendererArgs = inicializar_args();
     rendererArgs->ctx = args->ctx;
-    renderizar_principal(rendererArgs);
+    agregar_args_arr(rendererArr, rendererArgs);
+    renderizar_principal(rendererArr);
     // Ocultar o destruir la interfaz anterior
     GObject *ventanaActual = gtk_builder_get_object(builder, "listado");
     gtk_widget_hide(GTK_WIDGET(ventanaActual));
-    // liberar handler args
-    free(args);
+    destruccion_widget(arr);
+    printf("sali handle volver listado\n");
+    
 }
 
 void handle_volver_detalle(GtkButton* button, gpointer data){
-    Args* args = (Args*)data;
+    ArgsArray* arr = (ArgsArray*)data;
+    Args* args = arr->arr[0];
     GtkBuilder* builder = args->ctx->builder;
     char* widgetBase = args->widgetBase;
+
+    Args* rendererArgs = inicializar_args();
+    rendererArgs->ctx = args->ctx;
+    ArgsArray* rendererArr = inicializar_args_arr();
+    agregar_args_arr(rendererArr, rendererArgs);
     if (strcmp(widgetBase, "principal") == 0) {
-        Args* rendererArgs = inicializar_args();
-        rendererArgs->ctx = args->ctx;
-        renderizar_principal(rendererArgs);
+        renderizar_principal(rendererArr);
     }
     else {
-        Args* rendererArgs = inicializar_args();
-        rendererArgs->ctx = args->ctx;
-        renderizar_listado(rendererArgs);
+        renderizar_listado(rendererArr);
     }
     // Ocultar o destruir la interfaz anterior
     GObject *ventanaActual = gtk_builder_get_object(builder, "detalle");
     gtk_widget_hide(GTK_WIDGET(ventanaActual));
-    // liberar handler args
-    free(args);
-    free(widgetBase);
+    destruccion_widget(arr);
 }
 
 void handle_volver_de(GtkButton* button, gpointer data){
-    Args* args = (Args*)data;
+    ArgsArray* arr = (ArgsArray*)data;
+    Args* args = arr->arr[0];
     GtkBuilder* builder = args->ctx->builder;
     char* widgetPrevia = args->widgetPrevia;
     char* widgetBase = args->widgetBase;
 
+    Args* rendererArgs = inicializar_args();
+    rendererArgs->ctx = args->ctx;
+    ArgsArray* rendererArr = inicializar_args_arr();
+    agregar_args_arr(rendererArr, rendererArgs);
     if (strcmp(widgetPrevia, "detalle") == 0) {
-        Args* rendererArgs = inicializar_args();
-        rendererArgs->ctx = args->ctx;
         rendererArgs->widgetBase = g_strdup(widgetBase);
-        renderizar_detalle(rendererArgs);
+        renderizar_detalle(rendererArr);
     } else {
-        Args* rendererArgs = inicializar_args();
-        rendererArgs->ctx = args->ctx;
-        renderizar_listado(rendererArgs);
+        renderizar_listado(rendererArr);
     }
     // Ocultar o destruir la interfaz anterior
     GObject *ventanaActual = gtk_builder_get_object(builder, "detalle_editar");
     gtk_widget_hide(GTK_WIDGET(ventanaActual));
-    // liberar handler args
-    free(args);
-    free(widgetPrevia);
-    free(widgetBase);
+    destruccion_widget(arr);
 }
 
 void handle_volver_trabajo(GtkButton* button, gpointer data) {
-    Args* args = (Args*)data;
+    ArgsArray* arr = (ArgsArray*)data;
+    Args* args = arr->arr[0];
     GtkBuilder* builder = args->ctx->builder;
     char* widgetBase = args->widgetBase;
     // renderizamos detalle
     Args* rendererArgs = inicializar_args();
     rendererArgs->ctx = args->ctx;
     rendererArgs->widgetBase = g_strdup(widgetBase);
-    renderizar_detalle(rendererArgs);
+    ArgsArray* rendererArr = inicializar_args_arr();
+    agregar_args_arr(rendererArr, rendererArgs);
+    renderizar_detalle(rendererArr);
     // Ocultar o destruir la interfaz anterior
     GObject *ventanaActual = gtk_builder_get_object(builder, "trabajo");
     gtk_widget_hide(GTK_WIDGET(ventanaActual));
-    // liberar handler args
-    free(args);
-    free(widgetBase);
+    destruccion_widget(arr);
 }
 
 void handle_volver_te(GtkButton* button, gpointer data) {
-    Args* args = (Args*)data;
+    ArgsArray* arr = (ArgsArray*)data;
+    Args* args = arr->arr[0];
     GtkBuilder* builder = args->ctx->builder;
     char* widgetBase = args->widgetBase;
     char* accion = args->accion;
@@ -466,19 +478,19 @@ void handle_volver_te(GtkButton* button, gpointer data) {
         Args* rendererArgs = inicializar_args();
         rendererArgs->ctx = args->ctx;
         rendererArgs->widgetBase = g_strdup(widgetBase);
-        renderizar_trabajo(rendererArgs);
+        ArgsArray* rendererArr = inicializar_args_arr();
+        agregar_args_arr(rendererArr, rendererArgs);
+        renderizar_trabajo(rendererArr);
     }
     // Ocultar o destruir la interfaz actual
     GObject *ventanaActual = gtk_builder_get_object(builder, "trabajo_edit");
     gtk_widget_hide(GTK_WIDGET(ventanaActual));
-    // liberamos handlerargs
-    free(args);
-    free(accion);
-    free(widgetBase);
+    destruccion_widget(arr);
 }
 
 void handle_ver_listado(GtkButton* button, gpointer data) {
-    Args* args = (Args*)data;
+    ArgsArray* arr = (ArgsArray*)data;
+    Args* args = arr->arr[0];
     GtkBuilder* builder = args->ctx->builder;
     // renderizar el detalle del auto correspondiente cuando este la db hecha.
     char* widgetBase = malloc(sizeof(char)*10);
@@ -486,31 +498,38 @@ void handle_ver_listado(GtkButton* button, gpointer data) {
     Args* rendererArgs = inicializar_args();
     rendererArgs->ctx = args->ctx;
     rendererArgs->widgetBase = widgetBase;
-    renderizar_detalle(rendererArgs);
+    ArgsArray* rendererArr = inicializar_args_arr();
+    agregar_args_arr(rendererArr, rendererArgs);
+    renderizar_detalle(rendererArr);
     // Ocultar o destruir la interfaz anterior
     GObject *ventanaActual = gtk_builder_get_object(builder, "listado");
     gtk_widget_hide(GTK_WIDGET(ventanaActual));
-    // liberar handler args
-    free(args);
+    destruccion_widget(arr);
 }
 
 void handle_ver_principal(GtkButton* button, gpointer data) {
-    Args* args = (Args*)data;
+    printf("entre handle ver principal\n");
+    ArgsArray* arr = (ArgsArray*)data;
+    Args* args = arr->arr[0];
     GtkBuilder* builder = args->ctx->builder;
+    printf("direccion args en handle_ver_principal: %p\n", args);
 
     // renderizamos listado
     Args* rendererArgs = inicializar_args();
     rendererArgs->ctx = args->ctx;
-    renderizar_listado(rendererArgs);
+    ArgsArray* rendererArr = inicializar_args_arr();
+    agregar_args_arr(rendererArr, rendererArgs);
+    renderizar_listado(rendererArr);
     // Ocultar o destruir la interfaz anterior.
     GObject *ventanaActual = gtk_builder_get_object(builder, "principal");
     gtk_widget_hide(GTK_WIDGET(ventanaActual));
-    // liberar handler args
-    free(args);
+    destruccion_widget(arr);
+    printf("sali handle  ver prinicipal\n");
 }
 
 void handle_buscar_principal(GtkButton* button, gpointer data) {
-    Args* args = (Args*)data;
+    ArgsArray* arr = (ArgsArray*)data;
+    Args* args = arr->arr[0];
     GtkBuilder* builder = args->ctx->builder;
     // Obtener el GtkEntry
     GObject *entry = gtk_builder_get_object(builder, "p_patente_buscar");
@@ -524,16 +543,18 @@ void handle_buscar_principal(GtkButton* button, gpointer data) {
     Args* rendererArgs = inicializar_args();
     rendererArgs->widgetBase = widgetBase;
     rendererArgs->ctx = args->ctx;
-    renderizar_detalle(rendererArgs);
+    ArgsArray* rendererArr = inicializar_args_arr();
+    agregar_args_arr(rendererArr, rendererArgs);
+    renderizar_detalle(rendererArr);
     // Ocultar o destruir la interfaz anterior
     GObject *ventanaActual = gtk_builder_get_object(builder, "principal");
     gtk_widget_hide(GTK_WIDGET(ventanaActual)); 
-    // liberar handler args
-    free(args);
+    destruccion_widget(arr);
 }
 
 void handle_agregar_principal(GtkButton* button, gpointer data) {
-    Args* args = (Args*)data;
+    ArgsArray* arr = (ArgsArray*)data;
+    Args* args = arr->arr[0];
     GtkBuilder* builder = args->ctx->builder;
     Trabajo** trabajos = args->ctx->trabajos;
     int* contadorTrabajosActual = args->ctx->contadorTrabajosActual;
@@ -571,12 +592,11 @@ void handle_agregar_principal(GtkButton* button, gpointer data) {
         *contadorTrabajosActual = 0;
         *contadorTrabajosTotal = 0;
     }
-    free(args);
 }
 
 void handle_agregar_trabajo_principal(GtkButton* button, gpointer data) {
-    Args* args = (Args*)data;
-    
+    ArgsArray* arr = (ArgsArray*)data;
+    Args* args = arr->arr[0];
     char* widgetBase = malloc(sizeof(char)*15);
     strcpy(widgetBase, "principal");
     char *accion = malloc(sizeof(char)*15);
@@ -586,12 +606,14 @@ void handle_agregar_trabajo_principal(GtkButton* button, gpointer data) {
     rendererArgs->widgetBase = widgetBase;
     rendererArgs->accion = accion;
     rendererArgs->trabajoId = NULL;
-    renderizar_trabajo_editar(rendererArgs);
-    // free(args);
+    ArgsArray* rendererArr = inicializar_args_arr();
+    agregar_args_arr(rendererArr, rendererArgs);
+    renderizar_trabajo_editar(rendererArr);
 }
 
 void handle_editar_detalle(GtkButton* button, gpointer data) {
-    Args* args = (Args*)data;
+    ArgsArray* arr = (ArgsArray*)data;
+    Args* args = arr->arr[0];
     GtkBuilder* builder = args->ctx->builder;
     char* widgetBase = args->widgetBase;
     // renderizamos detalleeditar.glade
@@ -602,17 +624,18 @@ void handle_editar_detalle(GtkButton* button, gpointer data) {
     rendererArgs->ctx = args->ctx;
     rendererArgs->widgetPrevia = widgetPrevia;
     rendererArgs->widgetBase = g_strdup(widgetBase);
-    renderizar_detalle_editar(rendererArgs);
+    ArgsArray* rendererArr = inicializar_args_arr();
+    agregar_args_arr(rendererArr, rendererArgs);
+    renderizar_detalle_editar(rendererArr);
     // Ocultar o destruir la interfaz anterior
     GObject *ventanaActual = gtk_builder_get_object(builder, "detalle");
     gtk_widget_hide(GTK_WIDGET(ventanaActual)); 
-    // liberar handlerargs
-    free(args);
-    free(widgetBase);
+    destruccion_widget(arr);
 }
 
 void handle_editar_listado(GtkButton* button, gpointer data) {
-    Args* args = (Args*)data;
+    ArgsArray* arr = (ArgsArray*)data;
+    Args* args = arr->arr[0];
     GtkBuilder* builder = args->ctx->builder;
     // renderizamos detalleeditar.glade
     char* widgetPrevia = malloc(sizeof(char)*10);
@@ -623,16 +646,18 @@ void handle_editar_listado(GtkButton* button, gpointer data) {
     rendererArgs->ctx = args->ctx;
     rendererArgs->widgetPrevia = widgetPrevia;
     rendererArgs->widgetBase = widgetBase;
-    renderizar_detalle_editar(rendererArgs);
+    ArgsArray* rendererArr = inicializar_args_arr();
+    agregar_args_arr(rendererArr, rendererArgs);
+    renderizar_detalle_editar(rendererArr);
     // Ocultar o destruir la interfaz anterior
     GObject *ventanaActual = gtk_builder_get_object(builder, "listado");
     gtk_widget_hide(GTK_WIDGET(ventanaActual)); 
-    // liberar handler args
-    free(args);
+    destruccion_widget(arr);
 }
 
 void handle_editar_trabajo(GtkButton* button, gpointer data) {
-    Args* args = (Args*)data;
+    ArgsArray* arr = (ArgsArray*)data;
+    Args* args = arr->arr[0];
     GtkBuilder* builder = args->ctx->builder;
     char* widgetBase = args->widgetBase;
 
@@ -644,18 +669,19 @@ void handle_editar_trabajo(GtkButton* button, gpointer data) {
     rendererArgs->widgetBase = g_strdup(widgetBase);
     rendererArgs->accion = accion;
     rendererArgs->trabajoId = NULL;
-    renderizar_trabajo_editar(rendererArgs);
+    ArgsArray* rendererArr = inicializar_args_arr();
+    agregar_args_arr(rendererArr, rendererArgs);
+    renderizar_trabajo_editar(rendererArr);
     // Ocultar o destruir la interfaz anterior
     GObject *ventanaActual = gtk_builder_get_object(builder, "trabajo");
     gtk_widget_hide(GTK_WIDGET(ventanaActual)); 
-    // liberar handler args
-    free(args);
-    free(widgetBase);
+    destruccion_widget(arr);
 
 }
 
 void handle_editar_trabajo_principal(GtkButton* button, gpointer data) {
-    Args* args = (Args*)data;
+    ArgsArray* arr = (ArgsArray*)data;
+    Args* args = arr->arr[0];
     GtkBuilder* builder = args->ctx->builder;
     char* widgetBase = args->widgetBase;
 
@@ -671,14 +697,14 @@ void handle_editar_trabajo_principal(GtkButton* button, gpointer data) {
     rendererArgs->widgetBase = g_strdup(widgetBase);
     rendererArgs->accion = accion;
     rendererArgs->trabajoId = trabajoId;
-    renderizar_trabajo_editar(rendererArgs);
-
-    free(args);
-    free(widgetBase);
+    ArgsArray* rendererArr = inicializar_args_arr();
+    agregar_args_arr(rendererArr, rendererArgs);
+    renderizar_trabajo_editar(rendererArr);
 }
 
 void handle_eliminar_trabajo(GtkButton* button, gpointer data) {
-    Args* args = (Args*)data;
+    ArgsArray* arr = (ArgsArray*)data;
+    Args* args = arr->arr[0];
     GtkBuilder* builder = args->ctx->builder;
     GHashTable *tableWidgetsLabel = args->ctx->tableWidgetsLabel;
     Trabajo** trabajos = args->ctx->trabajos;
@@ -715,13 +741,12 @@ void handle_eliminar_trabajo(GtkButton* button, gpointer data) {
     g_hash_table_remove(tableWidgetsLabel, labelId);
     // Eliminamos el trabajo del estado global de trabajos
     eliminar_trabajo(trabajos, trabajoId, contadorTrabajosActual);
-    // liberar handler args
-    free(args);
     free(trabajoId);
 }
 
 void handle_combobox_detalle(GtkComboBox *combobox, gpointer data) {
-    Args* args = (Args*)data;
+    ArgsArray* arr = (ArgsArray*)data;
+    Args* args = arr->arr[0];
     GtkBuilder* builder = args->ctx->builder;
     char* widgetBase = args->widgetBase;
 
@@ -743,17 +768,18 @@ void handle_combobox_detalle(GtkComboBox *combobox, gpointer data) {
     Args* rendererArgs = inicializar_args();
     rendererArgs->ctx = args->ctx;
     rendererArgs->widgetBase = g_strdup(widgetBase);
-    renderizar_trabajo(rendererArgs);
+    ArgsArray* rendererArr = inicializar_args_arr();
+    agregar_args_arr(rendererArr, rendererArgs);
+    renderizar_trabajo(rendererArr);
     // Ocultar o destruir la interfaz anterior
     GObject *ventanaActual = gtk_builder_get_object(builder, "detalle");
     gtk_widget_hide(GTK_WIDGET(ventanaActual));
-    // liberar handler args
-    free(args);
-    free(widgetBase);
+    destruccion_widget(arr);
 }
 
 void handle_confirmar_te(GtkButton* button, gpointer data) {
-    Args* args = (Args*)data;
+    ArgsArray* arr = (ArgsArray*)data;
+    Args* args = arr->arr[0];
     GtkBuilder* builder = args->ctx->builder;
     GHashTable *tableWidgetsLabel = args->ctx->tableWidgetsLabel;
     Trabajo** trabajos = args->ctx->trabajos;
@@ -788,7 +814,6 @@ void handle_confirmar_te(GtkButton* button, gpointer data) {
     trabajo->fecha = fecha;
 
     if (strcmp(accion, "agregar") == 0) {
-        printf("entre con %d trabajos\n", *contadorTrabajosActual);
         char *trabajoId = malloc(sizeof(char)*15);
         snprintf(trabajoId, 15, "trabajo_%d", *contadorTrabajosTotal+1);
         trabajo->id = trabajoId;
@@ -799,14 +824,17 @@ void handle_confirmar_te(GtkButton* button, gpointer data) {
         rendererArgs->ctx = args->ctx;
         rendererArgs->trabajoId = g_strdup(trabajoId);
         rendererArgs->tituloTrabajo = g_strdup(trabajo->titulo);
-        renderizar_trabajo_principal(rendererArgs);
-        printf("sali con %d trabajos\n", *(rendererArgs->ctx->contadorTrabajosActual));
+        ArgsArray* rendererArr = inicializar_args_arr();
+        agregar_args_arr(rendererArr, rendererArgs);
+        renderizar_trabajo_principal(rendererArr);
     }
     else if (strcmp(accion, "editarDb") == 0){
         Args* rendererArgs = inicializar_args();
         rendererArgs->ctx = args->ctx;
         rendererArgs->widgetBase = g_strdup(widgetBase);
-        renderizar_trabajo(rendererArgs);
+        ArgsArray* rendererArr = inicializar_args_arr();
+        agregar_args_arr(rendererArr, rendererArgs);
+        renderizar_trabajo(rendererArr);
         // Editar trabajo en db
         free(trabajo->km);
         free(trabajo->titulo);
@@ -832,20 +860,17 @@ void handle_confirmar_te(GtkButton* button, gpointer data) {
     // Ocultar o destruir la interfaz anterior
     GObject *ventanaActual = gtk_builder_get_object(builder, "trabajo_edit");
     gtk_widget_hide(GTK_WIDGET(ventanaActual));
-    // liberar handlerArgs
-    free(args);
-    free(accion);
-    free(widgetBase);
+    destruccion_widget(arr);
 }
 
 void handle_confirmar_de(GtkButton* button, gpointer data) {
-    Args* args = (Args*)data;
+    ArgsArray* arr = (ArgsArray*)data;
+    Args* args = arr->arr[0];
     printf("accedi desde confirmar en detalleditar.glade\n");
-    free(args);
 }
 
 void handle_eliminar_listado(GtkButton* button, gpointer data) {
-    Args* args = (Args*)data;
+    ArgsArray* arr = (ArgsArray*)data;
+    Args* args = arr->arr[0];
     printf("accedi desde eliminar de listado.glade\n");
-    free(args);
 }
